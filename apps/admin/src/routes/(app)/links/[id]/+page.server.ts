@@ -1,8 +1,11 @@
+import { PUBLIC_SHORT_BASE_URL } from '$env/static/public';
 import { error, fail, redirect } from '@sveltejs/kit';
 import {
 	deleteLink,
+	findLinkByDestinationForUser,
 	findLinkById,
 	findLinkBySlug,
+	getLinkRangeStats,
 	updateLink
 } from '@ttemp/db/queries';
 import { isValidSlug, normalizeSlug } from '@ttemp/db/slug';
@@ -15,11 +18,21 @@ export async function load({ params }) {
 		throw error(404, 'Link not found');
 	}
 
-	return { link };
+	const stats = await getLinkRangeStats(link.id, 7);
+
+	return {
+		link,
+		stats,
+		shortBaseUrl: PUBLIC_SHORT_BASE_URL
+	};
 }
 
 export const actions = {
-	update: async ({ request, params }) => {
+	update: async ({ request, params, locals }) => {
+		if (!locals.user) {
+			return fail(401, { message: 'You must be signed in to update links.' });
+		}
+
 		const data = await request.formData();
 		const destinationInput = String(data.get('destination') ?? '').trim();
 		const title = String(data.get('title') ?? '').trim() || null;
@@ -30,6 +43,14 @@ export const actions = {
 		if (!destinationUrl) {
 			return fail(400, {
 				message: 'Destination URL must be a valid http(s) address.',
+				values: { destination: destinationInput, title, slug: rawSlug, isActive }
+			});
+		}
+
+		const existingDestination = await findLinkByDestinationForUser(locals.user.id, destinationUrl);
+		if (existingDestination && existingDestination.id !== params.id) {
+			return fail(400, {
+				message: 'You already have a link for that destination URL.',
 				values: { destination: destinationInput, title, slug: rawSlug, isActive }
 			});
 		}

@@ -1,4 +1,4 @@
-import { desc, eq, gte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lt, sql } from 'drizzle-orm';
 import { db } from './index';
 import { linkDailyStats, links } from './schema';
 
@@ -50,6 +50,16 @@ export async function deleteLink(id: string) {
 export async function findLinkBySlug(slug: string) {
 	return (
 		(await db.select().from(links).where(eq(links.slug, slug)).limit(1))[0] ?? null
+	);
+}
+
+export async function findLinkByDestinationForUser(createdBy: string, destinationUrl: string) {
+	return (
+		(await db
+			.select()
+			.from(links)
+			.where(and(eq(links.createdBy, createdBy), eq(links.destinationUrl, destinationUrl)))
+			.limit(1))[0] ?? null
 	);
 }
 
@@ -106,6 +116,33 @@ export async function getTotalClicks() {
 		.select({ total: sql<number>`coalesce(sum(${links.totalClicks}), 0)` })
 		.from(links);
 	return row?.total ?? 0;
+}
+
+export async function getLinkRangeStats(linkId: string, rangeDays = 7) {
+	const currentStart = getRangeStartDate(rangeDays);
+	const previousStart = getRangeStartDate(rangeDays * 2);
+	const totalClicksSql = sql<number>`coalesce(sum(${linkDailyStats.clicks}), 0)`;
+
+	const [current] = await db
+		.select({ total: totalClicksSql })
+		.from(linkDailyStats)
+		.where(and(eq(linkDailyStats.linkId, linkId), gte(linkDailyStats.day, currentStart)));
+
+	const [previous] = await db
+		.select({ total: totalClicksSql })
+		.from(linkDailyStats)
+		.where(
+			and(
+				eq(linkDailyStats.linkId, linkId),
+				gte(linkDailyStats.day, previousStart),
+				lt(linkDailyStats.day, currentStart)
+			)
+		);
+
+	return {
+		lastRangeClicks: current?.total ?? 0,
+		previousRangeClicks: previous?.total ?? 0
+	};
 }
 
 export function getRangeStartDate(rangeDays: number) {

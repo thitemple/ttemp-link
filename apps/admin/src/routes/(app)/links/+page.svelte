@@ -1,9 +1,12 @@
 <script lang="ts">
+	import { PUBLIC_REDIRECT_URL } from '$env/static/public';
 	import { createLink } from '$lib/model/link/mutations.remote';
 
 	let { data } = $props();
 
-	const base = $derived.by(() => (data.shortBaseUrl ?? '').replace(/\/+$/, ''));
+	const base = $derived.by(() =>
+		(data.shortBaseUrl ?? PUBLIC_REDIRECT_URL ?? '').replace(/\/+$/, '')
+	);
 	const shortUrl = (slug: string) => (base ? `${base}/${slug}` : `/${slug}`);
 	const fieldIssueCount = $derived.by(() => {
 		const fields = createLink.fields;

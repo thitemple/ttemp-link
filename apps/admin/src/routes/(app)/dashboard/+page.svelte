@@ -1,16 +1,18 @@
 <script lang="ts">
+	import { PUBLIC_REDIRECT_URL } from '$env/static/public';
 	import { createLink } from '$lib/model/link/mutations.remote';
+	import ShareLinkModal from '$lib/components/ShareLinkModal.svelte';
 
 	let { data } = $props();
 
 	const ranges = [7, 15, 30];
-	const base = $derived.by(() => (data.shortBaseUrl ?? '').replace(/\/+$/, ''));
+	const base = $derived.by(() =>
+		(data.shortBaseUrl ?? PUBLIC_REDIRECT_URL ?? '').replace(/\/+$/, '')
+	);
 	const shortUrl = (slug: string) => (base ? `${base}/${slug}` : `/${slug}`);
-	const createdUrl = $derived.by(() => {
-		const slug = createLink.result?.createdSlug;
-		return slug ? shortUrl(slug) : '';
-	});
-	const statusMessage = $derived.by(() => createLink.result?.message ?? '');
+	const createdSlug = $derived.by(() => createLink.result?.createdSlug ?? '');
+	const createdId = $derived.by(() => createLink.result?.createdId ?? '');
+	const createdUrl = $derived.by(() => (createdSlug ? shortUrl(createdSlug) : ''));
 	const fieldIssueCount = $derived.by(() => {
 		const fields = createLink.fields;
 		if (!fields) return 0;
@@ -21,24 +23,34 @@
 		);
 	});
 	const hasFieldIssues = $derived.by(() => fieldIssueCount > 0);
-	let copiedUrl = $state('');
-	const isCopied = $derived.by(() => copiedUrl !== '' && copiedUrl === createdUrl);
-	let copyTimeout: ReturnType<typeof setTimeout> | null = null;
+	const destinationIssues = $derived.by(() => createLink.fields?.destination?.issues() ?? []);
+	const destinationIssueKey = $derived.by(() => destinationIssues.map((issue) => issue.message).join('|'));
+	let isModalOpen = $state(false);
+	let lastCreatedId = $state('');
+	let destinationEditedSinceIssue = $state(false);
+	let lastDestinationIssueKey = $state('');
+	const closeModal = () => {
+		isModalOpen = false;
+	};
 
-	const copyLink = async () => {
-		if (!createdUrl) return;
-		try {
-			await navigator.clipboard.writeText(createdUrl);
-			copiedUrl = createdUrl;
-			if (copyTimeout) {
-				clearTimeout(copyTimeout);
-			}
-			copyTimeout = setTimeout(() => {
-				copiedUrl = '';
-				copyTimeout = null;
-			}, 2000);
-		} catch (error) {
-			copiedUrl = '';
+	$effect(() => {
+		if (!createdId || createdId === lastCreatedId) return;
+		lastCreatedId = createdId;
+		isModalOpen = true;
+	});
+
+	$effect(() => {
+		if (destinationIssueKey === lastDestinationIssueKey) return;
+		lastDestinationIssueKey = destinationIssueKey;
+		destinationEditedSinceIssue = false;
+	});
+
+	const handleDestinationInput = (event: Event) => {
+		if (!destinationIssues.length) return;
+		const target = event.currentTarget as HTMLInputElement | null;
+		if (!target) return;
+		if (target.value.trim() !== '') {
+			destinationEditedSinceIssue = true;
 		}
 	};
 </script>
@@ -111,11 +123,6 @@
 				Paste a long URL and get a short link without leaving the dashboard.
 			</p>
 
-			{#if statusMessage && !hasFieldIssues}
-				<div class="mt-4 border-2 border-black bg-[var(--accent)] px-4 py-3 text-sm font-semibold">
-					{statusMessage}
-				</div>
-			{/if}
 			{#if !hasFieldIssues}
 				{#each createLink.fields.allIssues() as issue (issue.message)}
 					<div class="mt-4 border-2 border-black bg-red-100 px-4 py-3 text-sm font-semibold">
@@ -124,30 +131,24 @@
 				{/each}
 			{/if}
 
-			{#if createdUrl}
-				<div class="mt-4 grid gap-2">
-					<p class="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-						New short link
-					</p>
-					<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-						<input class="brutal-input w-full" readonly value={createdUrl} />
-						<button class="brutal-button-secondary w-full sm:w-auto" type="button" onclick={copyLink}>
-							{isCopied ? 'Copied' : 'Copy'}
-						</button>
-					</div>
-				</div>
-			{/if}
-
 			<form {...createLink} class="mt-5 grid gap-4" data-sveltekit-preload-data="off">
 				<label class="flex flex-col gap-2 text-sm font-semibold">
 					<span>Destination URL</span>
-					{#each createLink.fields.destination.issues() as issue (issue.message)}
-						<span class="text-xs text-red-600">{issue.message}</span>
-					{/each}
+					{#if !destinationEditedSinceIssue}
+						{#each destinationIssues as issue (issue.message)}
+							<div
+								class="rounded border-2 border-black bg-red-100 px-3 py-2 text-sm font-semibold text-red-900 shadow-[3px_3px_0px_#000]"
+								role="alert"
+							>
+								{issue.message}
+							</div>
+						{/each}
+					{/if}
 					<input
 						class="brutal-input"
 						required
 						placeholder="https://example.com"
+						oninput={handleDestinationInput}
 						{...createLink.fields.destination.as('url')}
 					/>
 				</label>
@@ -181,3 +182,12 @@
 		</div>
 	</div>
 </section>
+
+<ShareLinkModal
+	open={isModalOpen}
+	url={createdUrl}
+	linkId={createdId}
+	heading="Your link is ready!"
+	subheading="Copy the link below to share it or choose a platform to share it to."
+	onClose={closeModal}
+/>

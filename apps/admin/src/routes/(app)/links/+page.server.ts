@@ -1,4 +1,4 @@
-import { PUBLIC_SHORT_BASE_URL } from '$env/static/public';
+import { PUBLIC_REDIRECT_URL } from '$env/static/public';
 import { fail } from '@sveltejs/kit';
 import { deleteLink, listLinks } from '@ttemp/db/queries';
 
@@ -7,7 +7,7 @@ export async function load() {
 
 	return {
 		links,
-		shortBaseUrl: PUBLIC_SHORT_BASE_URL
+		shortBaseUrl: PUBLIC_REDIRECT_URL
 	};
 }
 

@@ -1,4 +1,4 @@
-import { PUBLIC_SHORT_BASE_URL } from '$env/static/public';
+import { PUBLIC_REDIRECT_URL } from '$env/static/public';
 import { getTopLinksByRange, getTotalClicks } from '@ttemp/db/queries';
 
 const VALID_RANGES = new Set([7, 15, 30]);
@@ -16,6 +16,6 @@ export async function load({ url }) {
 		range,
 		topLinks,
 		totalClicks,
-		shortBaseUrl: PUBLIC_SHORT_BASE_URL
+		shortBaseUrl: PUBLIC_REDIRECT_URL
 	};
 }
