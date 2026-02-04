@@ -1,0 +1,46 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+
+@layer base {
+	:root {
+		--bg: #f4f1ea;
+		--ink: #0b0b0b;
+		--accent: #ff5d2a;
+		--accent-2: #1a7aff;
+		--paper: #ffffff;
+		--frame: #111111;
+		--muted: #6b6b6b;
+		--font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+		--font-body: 'Figtree', system-ui, sans-serif;
+		--font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+	}
+
+	body {
+		background: var(--bg);
+		color: var(--ink);
+		font-family: var(--font-body);
+	}
+
+	h1,
+	h2,
+	h3,
+	h4 {
+		font-family: var(--font-display);
+		letter-spacing: -0.02em;
+	}
+
+	code,
+	pre {
+		font-family: var(--font-mono);
+	}
+}
+
+@layer components {
+	.brutal-card {
+		@apply border-2 border-black bg-white shadow-[6px_6px_0px_#000];
+	}
+
+	.brutal-pill {
+		@apply rounded-full border-2 border-black bg-[var(--accent)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-black;
+	}
+}

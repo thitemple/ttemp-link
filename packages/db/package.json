@@ -1,0 +1,16 @@
+{
+	"name": "@ttemp/db",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./schema": "./src/schema.ts",
+		"./queries": "./src/queries.ts",
+		"./slug": "./src/slug.ts"
+	},
+	"dependencies": {
+		"dotenv": "^16.6.1",
+		"drizzle-orm": "^0.45.1",
+		"postgres": "^3.4.8"
+	}
+}
