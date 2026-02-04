@@ -1,8 +1,20 @@
 <script lang="ts">
-	let { data, form } = $props();
+	import { createLink } from '$lib/model/link/mutations.remote';
+
+	let { data } = $props();
 
 	const base = $derived.by(() => (data.shortBaseUrl ?? '').replace(/\/+$/, ''));
 	const shortUrl = (slug: string) => (base ? `${base}/${slug}` : `/${slug}`);
+	const fieldIssueCount = $derived.by(() => {
+		const fields = createLink.fields;
+		if (!fields) return 0;
+		return (
+			(fields.destination?.issues()?.length ?? 0) +
+			(fields.slug?.issues()?.length ?? 0) +
+			(fields.title?.issues()?.length ?? 0)
+		);
+	});
+	const hasFieldIssues = $derived.by(() => fieldIssueCount > 0);
 </script>
 
 <section class="grid gap-6">
@@ -20,37 +32,42 @@
 			Leave slug empty to auto-generate a 7-character slug.
 		</p>
 
-		{#if form?.message}
-			<div class="mt-5 border-2 border-black bg-[var(--accent)] px-4 py-3 text-sm font-semibold">
-				{form.message}
-			</div>
+		{#if !hasFieldIssues}
+			{#each createLink.fields.allIssues() as issue (issue.message)}
+				<div class="mt-5 border-2 border-black bg-red-100 px-4 py-3 text-sm font-semibold">
+					{issue.message}
+				</div>
+			{/each}
 		{/if}
 
-		<form
-			method="POST"
-			action="?/create"
-			class="mt-6 grid gap-4 md:grid-cols-2"
-			data-sveltekit-preload-data="off"
-		>
+		<form {...createLink} class="mt-6 grid gap-4 md:grid-cols-2" data-sveltekit-preload-data="off">
 			<label class="flex flex-col gap-2 text-sm font-semibold md:col-span-2">
 				<span>Destination URL</span>
+				{#each createLink.fields.destination.issues() as issue (issue.message)}
+					<span class="text-xs text-red-600">{issue.message}</span>
+				{/each}
 				<input
 					class="brutal-input"
-					name="destination"
 					required
 					placeholder="https://example.com"
-					value={form?.values?.destination ?? ''}
+					{...createLink.fields.destination.as('url')}
 				/>
 			</label>
 
 			<label class="flex flex-col gap-2 text-sm font-semibold">
 				<span>Title (optional)</span>
-				<input class="brutal-input" name="title" value={form?.values?.title ?? ''} />
+				{#each createLink.fields.title.issues() as issue (issue.message)}
+					<span class="text-xs text-red-600">{issue.message}</span>
+				{/each}
+				<input class="brutal-input" {...createLink.fields.title.as('text')} />
 			</label>
 
 			<label class="flex flex-col gap-2 text-sm font-semibold">
 				<span>Custom slug (optional)</span>
-				<input class="brutal-input" name="slug" value={form?.values?.slug ?? ''} />
+				{#each createLink.fields.slug.issues() as issue (issue.message)}
+					<span class="text-xs text-red-600">{issue.message}</span>
+				{/each}
+				<input class="brutal-input" {...createLink.fields.slug.as('text')} />
 			</label>
 
 			<div class="md:col-span-2">
