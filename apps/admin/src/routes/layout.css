@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@plugin '@tailwindcss/forms';
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
 
 @layer base {
 	:root {
@@ -10,9 +10,9 @@
 		--paper: #ffffff;
 		--frame: #111111;
 		--muted: #6b6b6b;
-		--font-display: 'Bricolage Grotesque', system-ui, sans-serif;
-		--font-body: 'Figtree', system-ui, sans-serif;
-		--font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+		--font-display: "Bricolage Grotesque", system-ui, sans-serif;
+		--font-body: "Figtree", system-ui, sans-serif;
+		--font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 	}
 
 	body {
@@ -45,7 +45,7 @@
 	}
 
 	.brutal-pill {
-		@apply rounded-full border-2 border-black bg-[var(--accent)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-black;
+		@apply rounded-full border-2 border-black bg-[var(--accent)] px-3 py-1 text-xs font-semibold tracking-wide text-black uppercase;
 	}
 
 	.brutal-button {
@@ -69,7 +69,7 @@
 	}
 
 	.brutal-table th {
-		@apply border-b-2 border-black bg-black/5 px-3 py-2 text-left text-xs uppercase tracking-widest;
+		@apply border-b-2 border-black bg-black/5 px-3 py-2 text-left text-xs tracking-widest uppercase;
 	}
 
 	.brutal-table td {

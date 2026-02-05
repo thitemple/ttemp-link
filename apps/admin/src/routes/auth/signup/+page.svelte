@@ -18,7 +18,9 @@
 				<p class="mt-2 text-sm text-[var(--muted)]">One-time setup for the admin dashboard.</p>
 
 				{#if form?.message}
-					<div class="mt-5 border-2 border-black bg-[var(--accent)] px-4 py-3 text-sm font-semibold">
+					<div
+						class="mt-5 border-2 border-black bg-[var(--accent)] px-4 py-3 text-sm font-semibold"
+					>
 						{form.message}
 					</div>
 				{/if}
@@ -31,7 +33,7 @@
 							name="email"
 							type="email"
 							autocomplete="email"
-							value={form?.values?.email ?? ''}
+							value={form?.values?.email ?? ""}
 							required
 						/>
 					</label>
@@ -64,7 +66,9 @@
 
 			<div class="brutal-card-soft flex flex-col gap-5 p-6">
 				<h3 class="text-lg font-semibold">Already set up?</h3>
-				<p class="text-sm text-[var(--muted)]">If you already created the account, head back to login.</p>
+				<p class="text-sm text-[var(--muted)]">
+					If you already created the account, head back to login.
+				</p>
 				<a class="brutal-button-secondary w-fit" href="/auth/login">Back to login</a>
 			</div>
 		</div>

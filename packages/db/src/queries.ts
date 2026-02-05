@@ -1,6 +1,6 @@
 import { and, desc, eq, gte, lt, sql } from 'drizzle-orm';
 import { db } from './index';
-import { linkDailyStats, links } from './schema';
+import { linkClickEvents, linkDailyStats, links } from './schema';
 
 export async function createLink(input: {
 	slug: string;
@@ -90,6 +90,50 @@ export async function incrementClick(linkId: string, day: string) {
 	});
 }
 
+export async function trackLinkClick(input: {
+	linkId: string;
+	day: string;
+	referrerDomain?: string | null;
+	deviceType: string;
+	browserName: string;
+	browserVersion?: string | null;
+	osName?: string | null;
+	osVersion?: string | null;
+	countryCode?: string | null;
+	countryName?: string | null;
+	region?: string | null;
+	city?: string | null;
+}) {
+	await db.transaction(async (tx) => {
+		await tx.insert(linkClickEvents).values({
+			linkId: input.linkId,
+			referrerDomain: input.referrerDomain ?? null,
+			deviceType: input.deviceType,
+			browserName: input.browserName,
+			browserVersion: input.browserVersion ?? null,
+			osName: input.osName ?? null,
+			osVersion: input.osVersion ?? null,
+			countryCode: input.countryCode ?? null,
+			countryName: input.countryName ?? null,
+			region: input.region ?? null,
+			city: input.city ?? null
+		});
+
+		await tx
+			.insert(linkDailyStats)
+			.values({ linkId: input.linkId, day: input.day, clicks: 1 })
+			.onConflictDoUpdate({
+				target: [linkDailyStats.linkId, linkDailyStats.day],
+				set: { clicks: sql`${linkDailyStats.clicks} + 1` }
+			});
+
+		await tx
+			.update(links)
+			.set({ totalClicks: sql`${links.totalClicks} + 1` })
+			.where(eq(links.id, input.linkId));
+	});
+}
+
 export async function getTopLinksByRange(rangeDays: number) {
 	const startDate = getRangeStartDate(rangeDays);
 	const totalClicksSql = sql<number>`sum(${linkDailyStats.clicks})`;
@@ -145,6 +189,90 @@ export async function getLinkRangeStats(linkId: string, rangeDays = 7) {
 	};
 }
 
+export async function getClicksByDay(rangeDays: number, linkId?: string) {
+	const startDate = getRangeStartDate(rangeDays);
+	const conditions = linkId
+		? and(eq(linkDailyStats.linkId, linkId), gte(linkDailyStats.day, startDate))
+		: gte(linkDailyStats.day, startDate);
+
+	return db
+		.select({
+			day: linkDailyStats.day,
+			clicks: sql<number>`sum(${linkDailyStats.clicks})`
+		})
+		.from(linkDailyStats)
+		.where(conditions)
+		.groupBy(linkDailyStats.day)
+		.orderBy(linkDailyStats.day);
+}
+
+export async function getRangeTotalClicks(rangeDays: number, linkId?: string) {
+	const startDate = getRangeStartDate(rangeDays);
+	const totalClicksSql = sql<number>`coalesce(sum(${linkDailyStats.clicks}), 0)`;
+	const conditions = linkId
+		? and(eq(linkDailyStats.linkId, linkId), gte(linkDailyStats.day, startDate))
+		: gte(linkDailyStats.day, startDate);
+
+	const [row] = await db
+		.select({ total: totalClicksSql })
+		.from(linkDailyStats)
+		.where(conditions);
+
+	return row?.total ?? 0;
+}
+
+export async function getDeviceBreakdown(rangeDays: number, linkId?: string) {
+	return getClickEventBreakdown({
+		rangeDays,
+		linkId,
+		select: { device: linkClickEvents.deviceType },
+		groupBy: [linkClickEvents.deviceType]
+	});
+}
+
+export async function getBrowserBreakdown(rangeDays: number, linkId?: string) {
+	return getClickEventBreakdown({
+		rangeDays,
+		linkId,
+		select: { browser: linkClickEvents.browserName },
+		groupBy: [linkClickEvents.browserName]
+	});
+}
+
+export async function getReferrerBreakdown(rangeDays: number, linkId?: string) {
+	const referrerSql = sql<string>`coalesce(${linkClickEvents.referrerDomain}, 'Direct')`;
+	return getClickEventBreakdown({
+		rangeDays,
+		linkId,
+		select: { referrer: referrerSql },
+		groupBy: [referrerSql]
+	});
+}
+
+export async function getCountryBreakdown(rangeDays: number, linkId?: string) {
+	return getClickEventBreakdown({
+		rangeDays,
+		linkId,
+		select: {
+			countryCode: linkClickEvents.countryCode,
+			countryName: linkClickEvents.countryName
+		},
+		groupBy: [linkClickEvents.countryCode, linkClickEvents.countryName]
+	});
+}
+
+export async function getCityBreakdown(rangeDays: number, linkId?: string) {
+	return getClickEventBreakdown({
+		rangeDays,
+		linkId,
+		select: {
+			city: linkClickEvents.city,
+			countryName: linkClickEvents.countryName
+		},
+		groupBy: [linkClickEvents.city, linkClickEvents.countryName]
+	});
+}
+
 export function getRangeStartDate(rangeDays: number) {
 	const today = new Date();
 	const utcYear = today.getUTCFullYear();
@@ -157,4 +285,36 @@ export function getRangeStartDate(rangeDays: number) {
 export function getUtcDay(date = new Date()) {
 	const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 	return utcDate.toISOString().slice(0, 10);
+}
+
+function getRangeStartTimestamp(rangeDays: number) {
+	const today = new Date();
+	const utcStart = new Date(
+		Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - (rangeDays - 1))
+	);
+	return utcStart;
+}
+
+function getClickEventRangeCondition(rangeDays: number, linkId?: string) {
+	const startDate = getRangeStartTimestamp(rangeDays);
+	return linkId
+		? and(eq(linkClickEvents.linkId, linkId), gte(linkClickEvents.createdAt, startDate))
+		: gte(linkClickEvents.createdAt, startDate);
+}
+
+async function getClickEventBreakdown(input: {
+	rangeDays: number;
+	linkId?: string;
+	select: Record<string, unknown>;
+	groupBy: unknown[];
+}) {
+	const clicksSql = sql<number>`count(*)`;
+	const rows = await db
+		.select({ ...input.select, clicks: clicksSql })
+		.from(linkClickEvents)
+		.where(getClickEventRangeCondition(input.rangeDays, input.linkId))
+		.groupBy(...(input.groupBy as any[]))
+		.orderBy(desc(clicksSql));
+
+	return rows;
 }

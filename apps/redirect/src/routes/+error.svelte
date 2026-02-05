@@ -8,7 +8,8 @@
 			<span class="brutal-pill w-fit">404</span>
 			<h1 class="text-5xl font-semibold">That link vanished.</h1>
 			<p class="max-w-xl text-sm text-[var(--muted)]">
-				The page <span class="font-semibold text-black">{$page.url.pathname}</span> isn't a valid short link.
+				The page <span class="font-semibold text-black">{$page.url.pathname}</span> isn't a valid short
+				link.
 			</p>
 		</header>
 

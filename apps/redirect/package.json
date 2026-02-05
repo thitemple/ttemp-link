@@ -16,7 +16,8 @@
 		"test": "npm run test:unit -- --run"
 	},
 	"dependencies": {
-		"@ttemp/db": "workspace:*"
+		"@ttemp/db": "workspace:*",
+		"ua-parser-js": "^2.0.9"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.1",

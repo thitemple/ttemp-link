@@ -1,18 +1,18 @@
 <script lang="ts">
-	import { PUBLIC_SHORTLINK_BASE_URL } from '$env/static/public';
-	import { createLink } from '$lib/model/link/mutations.remote';
-	import ShareLinkModal from '$lib/components/ShareLinkModal.svelte';
+	import { PUBLIC_SHORTLINK_BASE_URL } from "$env/static/public";
+	import { createLink } from "$lib/model/link/mutations.remote";
+	import ShareLinkModal from "$lib/components/ShareLinkModal.svelte";
 
 	let { data } = $props();
 
 	const ranges = [7, 15, 30];
 	const base = $derived.by(() =>
-		(data.shortBaseUrl ?? PUBLIC_SHORTLINK_BASE_URL ?? '').replace(/\/+$/, '')
+		(data.shortBaseUrl ?? PUBLIC_SHORTLINK_BASE_URL ?? "").replace(/\/+$/, ""),
 	);
 	const shortUrl = (slug: string) => (base ? `${base}/${slug}` : `/${slug}`);
-	const createdSlug = $derived.by(() => createLink.result?.createdSlug ?? '');
-	const createdId = $derived.by(() => createLink.result?.createdId ?? '');
-	const createdUrl = $derived.by(() => (createdSlug ? shortUrl(createdSlug) : ''));
+	const createdSlug = $derived.by(() => createLink.result?.createdSlug ?? "");
+	const createdId = $derived.by(() => createLink.result?.createdId ?? "");
+	const createdUrl = $derived.by(() => (createdSlug ? shortUrl(createdSlug) : ""));
 	const fieldIssueCount = $derived.by(() => {
 		const fields = createLink.fields;
 		if (!fields) return 0;
@@ -24,11 +24,13 @@
 	});
 	const hasFieldIssues = $derived.by(() => fieldIssueCount > 0);
 	const destinationIssues = $derived.by(() => createLink.fields?.destination?.issues() ?? []);
-	const destinationIssueKey = $derived.by(() => destinationIssues.map((issue) => issue.message).join('|'));
+	const destinationIssueKey = $derived.by(() =>
+		destinationIssues.map((issue) => issue.message).join("|"),
+	);
 	let isModalOpen = $state(false);
-	let lastCreatedId = $state('');
+	let lastCreatedId = $state("");
 	let destinationEditedSinceIssue = $state(false);
-	let lastDestinationIssueKey = $state('');
+	let lastDestinationIssueKey = $state("");
 	const closeModal = () => {
 		isModalOpen = false;
 	};
@@ -49,7 +51,7 @@
 		if (!destinationIssues.length) return;
 		const target = event.currentTarget as HTMLInputElement | null;
 		if (!target) return;
-		if (target.value.trim() !== '') {
+		if (target.value.trim() !== "") {
 			destinationEditedSinceIssue = true;
 		}
 	};
@@ -66,8 +68,8 @@
 				{#each ranges as value (value)}
 					<a
 						href={`?range=${value}`}
-						class={`border-2 border-black px-3 py-1 text-xs font-semibold uppercase tracking-wide shadow-[3px_3px_0px_#000] ${
-							data.range === value ? 'bg-[var(--accent)]' : 'bg-white'
+						class={`border-2 border-black px-3 py-1 text-xs font-semibold tracking-wide uppercase shadow-[3px_3px_0px_#000] ${
+							data.range === value ? "bg-[var(--accent)]" : "bg-white"
 						}`}
 					>
 						{value} days
@@ -117,7 +119,7 @@
 
 	<div class="grid gap-6">
 		<div class="brutal-card p-6">
-			<p class="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Quick create</p>
+			<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">Quick create</p>
 			<h3 class="mt-2 text-2xl font-semibold">Make a short link</h3>
 			<p class="mt-2 text-sm text-[var(--muted)]">
 				Paste a long URL and get a short link without leaving the dashboard.
@@ -149,7 +151,7 @@
 						required
 						placeholder="https://example.com"
 						oninput={handleDestinationInput}
-						{...createLink.fields.destination.as('url')}
+						{...createLink.fields.destination.as("url")}
 					/>
 				</label>
 
@@ -161,7 +163,7 @@
 					<input
 						class="brutal-input"
 						placeholder="summer-sale"
-						{...createLink.fields.slug.as('text')}
+						{...createLink.fields.slug.as("text")}
 					/>
 				</label>
 
@@ -169,12 +171,12 @@
 			</form>
 		</div>
 		<div class="brutal-card p-6">
-			<p class="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Total clicks</p>
+			<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">Total clicks</p>
 			<p class="mt-2 text-4xl font-semibold">{data.totalClicks}</p>
 			<p class="mt-2 text-sm text-[var(--muted)]">All-time clicks across every short link.</p>
 		</div>
 		<div class="brutal-card p-6">
-			<p class="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Range snapshot</p>
+			<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">Range snapshot</p>
 			<p class="mt-2 text-3xl font-semibold">Last {data.range} days</p>
 			<p class="mt-2 text-sm text-[var(--muted)]">
 				Switch the range to see a different slice of your link performance.

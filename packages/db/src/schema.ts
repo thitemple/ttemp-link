@@ -51,3 +51,33 @@ export const linkDailyStats = pgTable(
 		dayIdx: index('link_daily_stats_day_idx').on(table.day)
 	})
 );
+
+export const linkClickEvents = pgTable(
+	'link_click_events',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		linkId: uuid('link_id')
+			.notNull()
+			.references(() => links.id, { onDelete: 'cascade' }),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+		referrerDomain: text('referrer_domain'),
+		deviceType: varchar('device_type', { length: 32 }).notNull(),
+		browserName: varchar('browser_name', { length: 64 }).notNull(),
+		browserVersion: varchar('browser_version', { length: 64 }),
+		osName: varchar('os_name', { length: 64 }),
+		osVersion: varchar('os_version', { length: 64 }),
+		countryCode: varchar('country_code', { length: 2 }),
+		countryName: varchar('country_name', { length: 80 }),
+		region: text('region'),
+		city: text('city')
+	},
+	(table) => ({
+		linkIdIdx: index('link_click_events_link_id_idx').on(table.linkId),
+		createdAtIdx: index('link_click_events_created_at_idx').on(table.createdAt),
+		countryCodeIdx: index('link_click_events_country_code_idx').on(table.countryCode),
+		cityIdx: index('link_click_events_city_idx').on(table.city),
+		referrerDomainIdx: index('link_click_events_referrer_domain_idx').on(table.referrerDomain),
+		deviceTypeIdx: index('link_click_events_device_type_idx').on(table.deviceType),
+		browserNameIdx: index('link_click_events_browser_name_idx').on(table.browserName)
+	})
+);

@@ -41,6 +41,6 @@
 	}
 
 	.brutal-pill {
-		@apply rounded-full border-2 border-black bg-[var(--accent)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-black;
+		@apply rounded-full border-2 border-black bg-[var(--accent)] px-3 py-1 text-xs font-semibold tracking-wide text-black uppercase;
 	}
 }

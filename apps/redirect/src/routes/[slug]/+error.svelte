@@ -8,8 +8,8 @@
 			<span class="brutal-pill w-fit">404</span>
 			<h1 class="text-5xl font-semibold">That link vanished.</h1>
 			<p class="max-w-xl text-sm text-[var(--muted)]">
-				The slug <span class="font-semibold text-black">{$page.params.slug}</span> doesn't point to an active
-				link right now.
+				The slug <span class="font-semibold text-black">{$page.params.slug}</span> doesn't point to an
+				active link right now.
 			</p>
 		</header>
 

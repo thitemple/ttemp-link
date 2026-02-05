@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { PUBLIC_SHORTLINK_BASE_URL } from '$env/static/public';
-	import { createLink } from '$lib/model/link/mutations.remote';
+	import { PUBLIC_SHORTLINK_BASE_URL } from "$env/static/public";
+	import { createLink } from "$lib/model/link/mutations.remote";
+
+	console.log("DAS PUBLIC_SHORTLINK_BASE_URL", PUBLIC_SHORTLINK_BASE_URL);
 
 	let { data } = $props();
 
 	const base = $derived.by(() =>
-		(data.shortBaseUrl ?? PUBLIC_SHORTLINK_BASE_URL ?? '').replace(/\/+$/, '')
+		(data.shortBaseUrl ?? PUBLIC_SHORTLINK_BASE_URL ?? "").replace(/\/+$/, ""),
 	);
 	const shortUrl = (slug: string) => (base ? `${base}/${slug}` : `/${slug}`);
 	const fieldIssueCount = $derived.by(() => {
@@ -53,7 +55,7 @@
 					class="brutal-input"
 					required
 					placeholder="https://example.com"
-					{...createLink.fields.destination.as('url')}
+					{...createLink.fields.destination.as("url")}
 				/>
 			</label>
 
@@ -62,7 +64,7 @@
 				{#each createLink.fields.title.issues() as issue (issue.message)}
 					<span class="text-xs text-red-600">{issue.message}</span>
 				{/each}
-				<input class="brutal-input" {...createLink.fields.title.as('text')} />
+				<input class="brutal-input" {...createLink.fields.title.as("text")} />
 			</label>
 
 			<label class="flex flex-col gap-2 text-sm font-semibold">
@@ -70,7 +72,7 @@
 				{#each createLink.fields.slug.issues() as issue (issue.message)}
 					<span class="text-xs text-red-600">{issue.message}</span>
 				{/each}
-				<input class="brutal-input" {...createLink.fields.slug.as('text')} />
+				<input class="brutal-input" {...createLink.fields.slug.as("text")} />
 			</label>
 
 			<div class="md:col-span-2">
@@ -117,10 +119,10 @@
 								<td>
 									<span
 										class={`inline-flex items-center rounded-full border-2 border-black px-3 py-1 text-xs font-semibold ${
-											link.isActive ? 'bg-[var(--accent-2)] text-white' : 'bg-black/10'
+											link.isActive ? "bg-[var(--accent-2)] text-white" : "bg-black/10"
 										}`}
 									>
-										{link.isActive ? 'Active' : 'Inactive'}
+										{link.isActive ? "Active" : "Inactive"}
 									</span>
 								</td>
 								<td class="text-right font-semibold">{link.totalClicks}</td>
