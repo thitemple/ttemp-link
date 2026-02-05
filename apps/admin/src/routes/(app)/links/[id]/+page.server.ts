@@ -1,4 +1,4 @@
-import { PUBLIC_SHORT_BASE_URL } from '$env/static/public';
+import { PUBLIC_SHORTLINK_BASE_URL } from '$env/static/public';
 import { error, fail, redirect } from '@sveltejs/kit';
 import {
 	deleteLink,
@@ -23,7 +23,7 @@ export async function load({ params }) {
 	return {
 		link,
 		stats,
-		shortBaseUrl: PUBLIC_SHORT_BASE_URL
+		shortBaseUrl: PUBLIC_SHORTLINK_BASE_URL
 	};
 }
 

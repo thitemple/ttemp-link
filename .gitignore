@@ -10,6 +10,7 @@ node_modules
 **/.svelte-kit
 **/build
 **/.output
+.turbo
 
 # OS
 .DS_Store

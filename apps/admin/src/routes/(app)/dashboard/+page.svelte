@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_REDIRECT_URL } from '$env/static/public';
+	import { PUBLIC_SHORTLINK_BASE_URL } from '$env/static/public';
 	import { createLink } from '$lib/model/link/mutations.remote';
 	import ShareLinkModal from '$lib/components/ShareLinkModal.svelte';
 
@@ -7,7 +7,7 @@
 
 	const ranges = [7, 15, 30];
 	const base = $derived.by(() =>
-		(data.shortBaseUrl ?? PUBLIC_REDIRECT_URL ?? '').replace(/\/+$/, '')
+		(data.shortBaseUrl ?? PUBLIC_SHORTLINK_BASE_URL ?? '').replace(/\/+$/, '')
 	);
 	const shortUrl = (slug: string) => (base ? `${base}/${slug}` : `/${slug}`);
 	const createdSlug = $derived.by(() => createLink.result?.createdSlug ?? '');
