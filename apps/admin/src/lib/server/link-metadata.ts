@@ -1,3 +1,5 @@
+import { env } from "$env/dynamic/private";
+
 const TITLE_REGEX = /<title[^>]*>([^<]*)<\/title>/i;
 const OG_TITLE_REGEX = /<meta[^>]+property=["']og:title["'][^>]*content=["']([^"']+)["'][^>]*>/i;
 const OG_TITLE_NAME_REGEX = /<meta[^>]+name=["']og:title["'][^>]*content=["']([^"']+)["'][^>]*>/i;
@@ -17,6 +19,12 @@ export const extractTitleFromHtml = (html: string) => {
 	return null;
 };
 
+const buildHeaders = () => {
+	const userAgent = env.LINK_METADATA_USER_AGENT?.trim();
+	if (!userAgent) return undefined;
+	return { "user-agent": userAgent };
+};
+
 export const fetchPageTitle = async (url: string, timeoutMs = 4000) => {
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -24,9 +32,7 @@ export const fetchPageTitle = async (url: string, timeoutMs = 4000) => {
 		const response = await fetch(url, {
 			signal: controller.signal,
 			redirect: "follow",
-			headers: {
-				"user-agent": "ttemp-link/1.0",
-			},
+			headers: buildHeaders(),
 		});
 		if (!response.ok) return null;
 		const contentType = response.headers.get("content-type") ?? "";

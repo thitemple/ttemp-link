@@ -13,18 +13,24 @@ Personal URL shortener with a dedicated admin dashboard and a redirect app.
 1. Copy env files:
 
 ```sh
-cp .env.example .env
-cp apps/admin/.env.example apps/admin/.env
-cp apps/redirect/.env.example apps/redirect/.env
+cp .env.example .env.local
 ```
 
-2. Start Postgres:
+2. Symlink root env into each app (for SvelteKit dev):
+
+```sh
+# Run from the repo root. The ../../ path is relative to each app directory.
+ln -sf ../../.env.local apps/admin/.env.local
+ln -sf ../../.env.local apps/redirect/.env.local
+```
+
+3. Start Postgres:
 
 ```sh
 bun run db:start
 ```
 
-3. Install deps and run dev servers:
+4. Install deps and run dev servers:
 
 ```sh
 bun install
@@ -32,6 +38,9 @@ bun run dev
 ```
 
 Admin app runs at `http://localhost:5173` and redirect app at `http://localhost:5174`.
+
+Both apps read environment variables from the repo root. For dev, we symlink the root `.env.local` into each app
+so SvelteKit can resolve it from the project root.
 
 ## Better Auth schema
 
@@ -54,13 +63,24 @@ Drizzle config lives at `drizzle.config.ts` and points to `packages/db/src/schem
 
 ## Auth setup (Better Auth)
 
-Set these in `apps/admin/.env`:
+Set these in the root `.env.local`:
 
 - `BETTER_AUTH_SECRET`
 - `BETTER_AUTH_BASE_URL`
 - `ADMIN_ALLOWLIST`
 
 Use your email in `ADMIN_ALLOWLIST` for first signup.
+
+Generate `BETTER_AUTH_SECRET` with:
+
+```sh
+openssl rand -base64 32
+```
+
+## Optional configuration
+
+- `PUBLIC_SHORTLINK_DISPLAY` — display label for the short domain in the admin header (defaults to `PUBLIC_SHORTLINK_BASE_URL` host).
+- `LINK_METADATA_USER_AGENT` — user agent used when fetching page titles for link metadata (defaults to no explicit header).
 
 ## Scripts
 

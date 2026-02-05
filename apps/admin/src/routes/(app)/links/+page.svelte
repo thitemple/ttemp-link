@@ -2,8 +2,6 @@
 	import { PUBLIC_SHORTLINK_BASE_URL } from "$env/static/public";
 	import { createLink } from "$lib/model/link/mutations.remote";
 
-	console.log("DAS PUBLIC_SHORTLINK_BASE_URL", PUBLIC_SHORTLINK_BASE_URL);
-
 	let { data } = $props();
 
 	const base = $derived.by(() =>
