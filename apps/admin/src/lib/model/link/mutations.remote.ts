@@ -1,11 +1,6 @@
 import { command, form, getRequestEvent } from "$app/server";
 import { error, invalid } from "@sveltejs/kit";
-import {
-	createLink as createLinkRecord,
-	findLinkByDestinationForUser,
-	findLinkById,
-	updateLink,
-} from "@ttemp/db/queries";
+import { createLink as createLinkRecord, findLinkById, updateLink } from "@ttemp/db/queries";
 import * as v from "valibot";
 import { resolveCreateSlug } from "$lib/server/link-create";
 import { normalizeTag, normalizeTags, validateTagLimits } from "$lib/server/link-tags";
@@ -29,8 +24,28 @@ type TagMutationResult = {
 	message?: string;
 };
 
+type DatabaseError = {
+	code?: string;
+	constraint?: string;
+	constraint_name?: string;
+	cause?: unknown;
+};
+
 const areTagsEqual = (left: string[], right: string[]) =>
 	left.length === right.length && left.every((value, index) => value === right[index]);
+
+const asDatabaseError = (value: unknown): DatabaseError | null =>
+	typeof value === "object" && value !== null ? (value as DatabaseError) : null;
+
+const resolveDatabaseError = (value: unknown): DatabaseError | null => {
+	const directError = asDatabaseError(value);
+	if (!directError) return null;
+	const nestedError = asDatabaseError(directError.cause);
+	return nestedError ?? directError;
+};
+
+const resolveConstraintName = (error: DatabaseError | null) =>
+	error?.constraint ?? error?.constraint_name ?? "";
 
 const requireOwnedLink = async (linkId: string) => {
 	const { locals } = getRequestEvent();
@@ -53,8 +68,9 @@ const requireOwnedLink = async (linkId: string) => {
 
 export const createLink = form(createLinkSchema, async (data, issue) => {
 	const { locals } = getRequestEvent();
+	const user = locals.user;
 
-	if (!locals.user) {
+	if (!user) {
 		invalid("You must be signed in to create links.");
 	}
 
@@ -67,11 +83,6 @@ export const createLink = form(createLinkSchema, async (data, issue) => {
 		invalid(issue.destination("Destination URL must be a valid http(s) address."));
 	}
 
-	const existingDestination = await findLinkByDestinationForUser(locals.user.id, destinationUrl);
-	if (existingDestination) {
-		invalid(issue.destination("You already have a link for that destination URL."));
-	}
-
 	const slugResult = await resolveCreateSlug(rawSlug);
 	if (!slugResult.ok) {
 		invalid(issue.slug(slugResult.message));
@@ -80,12 +91,29 @@ export const createLink = form(createLinkSchema, async (data, issue) => {
 	const fetchedTitle = titleInput === "" ? await fetchPageTitle(destinationUrl) : null;
 	const title = titleInput === "" ? fetchedTitle : titleInput;
 
-	const record = await createLinkRecord({
-		slug: slugResult.slug,
-		destinationUrl,
-		title: title === "" ? null : title,
-		createdBy: locals.user.id,
-	});
+	const record = await (async () => {
+		try {
+			return await createLinkRecord({
+				slug: slugResult.slug,
+				destinationUrl,
+				title: title === "" ? null : title,
+				createdBy: user.id,
+			});
+		} catch (createError) {
+			const databaseError = resolveDatabaseError(createError);
+			const constraintName = resolveConstraintName(databaseError);
+
+			if (databaseError?.code === "23505" && constraintName === "links_slug_unique") {
+				invalid(issue.slug("This slug is already in use."));
+			}
+
+			if (databaseError?.code === "23503") {
+				invalid("Your session is out of date. Sign out and sign in again.");
+			}
+
+			throw createError;
+		}
+	})();
 
 	if (!record) {
 		invalid("Unable to create the short link. Please try again.");

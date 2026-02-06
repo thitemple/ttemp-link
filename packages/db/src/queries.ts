@@ -56,16 +56,6 @@ export async function findLinkBySlug(slug: string) {
 	);
 }
 
-export async function findLinkByDestinationForUser(createdBy: string, destinationUrl: string) {
-	return (
-		(await db
-			.select()
-			.from(links)
-			.where(and(eq(links.createdBy, createdBy), eq(links.destinationUrl, destinationUrl)))
-			.limit(1))[0] ?? null
-	);
-}
-
 export async function findLinkById(id: string) {
 	return (
 		(await db.select().from(links).where(eq(links.id, id)).limit(1))[0] ?? null

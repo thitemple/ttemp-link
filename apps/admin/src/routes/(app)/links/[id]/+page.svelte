@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from "$app/stores";
 	import ShareLinkModal from "$lib/components/ShareLinkModal.svelte";
 	import { addTag, removeTag } from "$lib/model/link/mutations.remote";
 
@@ -64,6 +65,7 @@
 	const isCopied = $derived.by(() => copiedUrl !== "" && copiedUrl === shortUrl);
 	let copyTimeout: ReturnType<typeof setTimeout> | null = null;
 	let isShareOpen = $state(false);
+	let didAutoOpenShareModal = $state(false);
 	let isEditOpen = $state(false);
 	let tagInput = $state("");
 	let tagMessage = $state("");
@@ -176,6 +178,13 @@
 		if (didInitTags) return;
 		tags = sourceTags;
 		didInitTags = true;
+	});
+
+	$effect(() => {
+		if (didAutoOpenShareModal) return;
+		if ($page.url.searchParams.get("created") !== "1") return;
+		didAutoOpenShareModal = true;
+		isShareOpen = true;
 	});
 </script>
 
@@ -390,4 +399,11 @@
 	{/if}
 </section>
 
-<ShareLinkModal open={isShareOpen} url={shortUrl} onClose={closeShare} />
+<ShareLinkModal
+	open={isShareOpen}
+	url={shortUrl}
+	linkId={data.link.id}
+	heading="Your link is ready!"
+	subheading="Copy the link below to share it or choose a platform to share it to."
+	onClose={closeShare}
+/>

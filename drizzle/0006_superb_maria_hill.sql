@@ -1,0 +1,1 @@
+DROP INDEX "links_user_destination_unique";

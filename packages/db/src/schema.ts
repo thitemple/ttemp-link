@@ -32,10 +32,6 @@ export const links = pgTable(
 	},
 	(table) => ({
 		slugUnique: uniqueIndex('links_slug_unique').on(table.slug),
-		destinationUnique: uniqueIndex('links_user_destination_unique').on(
-			table.createdBy,
-			table.destinationUrl
-		),
 		createdAtIdx: index('links_created_at_idx').on(table.createdAt)
 	})
 );

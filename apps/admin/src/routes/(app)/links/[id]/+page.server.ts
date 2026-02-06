@@ -2,7 +2,6 @@ import { PUBLIC_SHORTLINK_BASE_URL } from "$env/static/public";
 import { error, fail, redirect } from "@sveltejs/kit";
 import {
 	deleteLink,
-	findLinkByDestinationForUser,
 	findLinkById,
 	findLinkBySlug,
 	getLinkRangeStats,
@@ -43,14 +42,6 @@ export const actions = {
 		if (!destinationUrl) {
 			return fail(400, {
 				message: "Destination URL must be a valid http(s) address.",
-				values: { destination: destinationInput, title, slug: rawSlug, isActive },
-			});
-		}
-
-		const existingDestination = await findLinkByDestinationForUser(locals.user.id, destinationUrl);
-		if (existingDestination && existingDestination.id !== params.id) {
-			return fail(400, {
-				message: "You already have a link for that destination URL.",
 				values: { destination: destinationInput, title, slug: rawSlug, isActive },
 			});
 		}
