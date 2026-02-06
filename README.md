@@ -81,6 +81,12 @@ openssl rand -base64 32
 
 - `PUBLIC_SHORTLINK_DISPLAY` — display label for the short domain in the admin header (defaults to `PUBLIC_SHORTLINK_BASE_URL` host).
 - `LINK_METADATA_USER_AGENT` — user agent used when fetching page titles for link metadata (defaults to no explicit header).
+- `MAXMIND_LICENSE_KEY` — optional key for GeoLite2 Country fallback downloads from the settings page.
+
+Country analytics behavior:
+- Country tracking is controlled in `/settings`.
+- Resolution order is provider headers first, GeoLite fallback second.
+- GeoLite database is stored in Postgres and refreshed from the admin settings page.
 
 ## Scripts
 

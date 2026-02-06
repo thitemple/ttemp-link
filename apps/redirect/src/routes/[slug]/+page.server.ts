@@ -1,8 +1,14 @@
 import { error, redirect } from '@sveltejs/kit';
-import { findLinkBySlug, getUtcDay, trackLinkClick } from '@ttemp/db/queries';
-import { normalizeReferrer, parseUserAgent, resolveGeoFromHeaders } from '$lib/analytics';
+import { findLinkBySlug, getAnalyticsSettings, getUtcDay, trackLinkClick } from '@ttemp/db/queries';
+import {
+	normalizeReferrer,
+	parseUserAgent,
+	resolveClientIpFromHeaders,
+	resolveGeoFromHeaders
+} from '$lib/analytics';
+import { resolveCountryFromGeoLite } from '$lib/geoip';
 
-export async function load({ params, request, setHeaders }) {
+export async function load({ params, request, setHeaders, getClientAddress }) {
 	const link = await findLinkBySlug(params.slug);
 
 	if (!link || !link.isActive) {
@@ -11,7 +17,23 @@ export async function load({ params, request, setHeaders }) {
 
 	const referrerDomain = normalizeReferrer(request.headers.get('referer'));
 	const uaInfo = parseUserAgent(request.headers.get('user-agent'));
-	const geoInfo = resolveGeoFromHeaders(request.headers);
+	const settings = await getAnalyticsSettings();
+	const trackCountry = settings?.trackCountry ?? false;
+	const useGeoLiteFallback = trackCountry && (settings?.useGeoLiteFallback ?? false);
+
+	const headerGeo = trackCountry
+		? resolveGeoFromHeaders(request.headers)
+		: { countryCode: null, countryName: null, region: null, city: null };
+	let countryCode = headerGeo.countryCode;
+	let countryName = headerGeo.countryName;
+
+	if (trackCountry && !countryCode && useGeoLiteFallback) {
+		const fallbackCountry = await resolveCountryFromGeoLite(
+			resolveClientIpFromHeaders(request.headers) ?? getClientAddress()
+		);
+		countryCode = fallbackCountry?.countryCode ?? null;
+		countryName = fallbackCountry?.countryName ?? null;
+	}
 
 	await trackLinkClick({
 		linkId: link.id,
@@ -22,10 +44,10 @@ export async function load({ params, request, setHeaders }) {
 		browserVersion: uaInfo.browserVersion,
 		osName: uaInfo.osName,
 		osVersion: uaInfo.osVersion,
-		countryCode: geoInfo.countryCode,
-		countryName: geoInfo.countryName,
-		region: geoInfo.region,
-		city: geoInfo.city
+		countryCode: trackCountry ? countryCode : null,
+		countryName: trackCountry ? countryName : null,
+		region: null,
+		city: null
 	});
 	setHeaders({ 'cache-control': 'no-store' });
 

@@ -1,11 +1,12 @@
 import { and, desc, eq, gte, lt, sql } from 'drizzle-orm';
 import { db } from './index';
-import { linkClickEvents, linkDailyStats, links } from './schema';
+import { analyticsSettings, geoipCountryDb, linkClickEvents, linkDailyStats, links } from './schema';
 
 export async function createLink(input: {
 	slug: string;
 	destinationUrl: string;
 	title?: string | null;
+	tags?: string[];
 	createdBy: string;
 }) {
 	const [record] = await db
@@ -14,6 +15,7 @@ export async function createLink(input: {
 			slug: input.slug,
 			destinationUrl: input.destinationUrl,
 			title: input.title ?? null,
+			tags: input.tags ?? [],
 			createdBy: input.createdBy
 		})
 		.returning();
@@ -27,6 +29,7 @@ export async function updateLink(
 		slug: string;
 		destinationUrl: string;
 		title: string | null;
+		tags: string[];
 		isActive: boolean;
 	}>
 ) {
@@ -132,6 +135,156 @@ export async function trackLinkClick(input: {
 			.set({ totalClicks: sql`${links.totalClicks} + 1` })
 			.where(eq(links.id, input.linkId));
 	});
+}
+
+const SETTINGS_ID = 'default';
+
+export async function getAnalyticsSettings() {
+	const [existing] = await db
+		.select()
+		.from(analyticsSettings)
+		.where(eq(analyticsSettings.id, SETTINGS_ID))
+		.limit(1);
+
+	if (existing) return existing;
+
+	const [created] = await db
+		.insert(analyticsSettings)
+		.values({ id: SETTINGS_ID })
+		.onConflictDoNothing()
+		.returning();
+
+	if (created) return created;
+
+	const [fallback] = await db
+		.select()
+		.from(analyticsSettings)
+		.where(eq(analyticsSettings.id, SETTINGS_ID))
+		.limit(1);
+
+	return fallback ?? null;
+}
+
+export async function upsertAnalyticsSettings(input: {
+	trackCountry: boolean;
+	useGeoLiteFallback: boolean;
+	maxmindLicenseKey?: string | null;
+}) {
+	const updateSet: {
+		trackCountry: boolean;
+		useGeoLiteFallback: boolean;
+		updatedAt: Date;
+		maxmindLicenseKey?: string | null;
+	} = {
+		trackCountry: input.trackCountry,
+		useGeoLiteFallback: input.useGeoLiteFallback,
+		updatedAt: new Date()
+	};
+	if (input.maxmindLicenseKey !== undefined) {
+		updateSet.maxmindLicenseKey = input.maxmindLicenseKey;
+	}
+
+	const [record] = await db
+		.insert(analyticsSettings)
+		.values({
+			id: SETTINGS_ID,
+			trackCountry: input.trackCountry,
+			useGeoLiteFallback: input.useGeoLiteFallback,
+			maxmindLicenseKey: input.maxmindLicenseKey ?? null,
+			updatedAt: new Date()
+		})
+		.onConflictDoUpdate({
+			target: analyticsSettings.id,
+			set: updateSet
+		})
+		.returning();
+
+	return record ?? null;
+}
+
+export async function getGeoipCountryDb() {
+	const [record] = await db
+		.select()
+		.from(geoipCountryDb)
+		.where(eq(geoipCountryDb.id, SETTINGS_ID))
+		.limit(1);
+
+	return record ?? null;
+}
+
+export async function saveGeoipCountryDb(input: {
+	mmdb: Uint8Array;
+	sourceUrl: string;
+	etag?: string | null;
+	lastModifiedAt?: Date | null;
+	latestLastModifiedAt?: Date | null;
+}) {
+	const now = new Date();
+	const [record] = await db
+		.insert(geoipCountryDb)
+		.values({
+			id: SETTINGS_ID,
+			mmdb: input.mmdb,
+			sourceUrl: input.sourceUrl,
+			etag: input.etag ?? null,
+			lastModifiedAt: input.lastModifiedAt ?? null,
+			latestLastModifiedAt: input.latestLastModifiedAt ?? input.lastModifiedAt ?? null,
+			fetchedAt: now,
+			checkedAt: now,
+			updatedAt: now
+		})
+		.onConflictDoUpdate({
+			target: geoipCountryDb.id,
+			set: {
+				mmdb: input.mmdb,
+				sourceUrl: input.sourceUrl,
+				etag: input.etag ?? null,
+				lastModifiedAt: input.lastModifiedAt ?? null,
+				latestLastModifiedAt: input.latestLastModifiedAt ?? input.lastModifiedAt ?? null,
+				fetchedAt: now,
+				checkedAt: now,
+				updatedAt: now
+			}
+		})
+		.returning();
+
+	return record ?? null;
+}
+
+export async function saveGeoipCountryDbCheck(input: {
+	latestLastModifiedAt?: Date | null;
+	etag?: string | null;
+	sourceUrl?: string | null;
+	checkedAt?: Date;
+}) {
+	const now = input.checkedAt ?? new Date();
+	const updateSet: {
+		sourceUrl?: string;
+		etag?: string | null;
+		latestLastModifiedAt?: Date | null;
+		checkedAt: Date;
+		updatedAt: Date;
+	} = {
+		checkedAt: now,
+		updatedAt: now
+	};
+	if (typeof input.sourceUrl === 'string' && input.sourceUrl.trim()) {
+		updateSet.sourceUrl = input.sourceUrl.trim();
+	}
+	if (input.etag !== undefined) {
+		updateSet.etag = input.etag;
+	}
+	if (input.latestLastModifiedAt !== undefined) {
+		updateSet.latestLastModifiedAt = input.latestLastModifiedAt;
+	}
+
+	const [record] = await db
+		.update(geoipCountryDb)
+		.set(updateSet)
+		.where(eq(geoipCountryDb.id, SETTINGS_ID))
+		.returning();
+
+	return record ?? null;
 }
 
 export async function getTopLinksByRange(rangeDays: number) {

@@ -1,7 +1,14 @@
 <script lang="ts">
 	import ShareLinkModal from "$lib/components/ShareLinkModal.svelte";
+	import { addTag, removeTag } from "$lib/model/link/mutations.remote";
 
 	let { data, form } = $props();
+
+	type TagMutationResult = {
+		ok: boolean;
+		tags: string[];
+		message?: string;
+	};
 
 	const base = $derived.by(() => (data.shortBaseUrl ?? "").replace(/\/+$/, ""));
 	const shortUrl = $derived.by(() => (base ? `${base}/${data.link.slug}` : `/${data.link.slug}`));
@@ -48,12 +55,23 @@
 		return Number.isFinite(change) ? Math.round(change) : 0;
 	});
 	const weeklyChangeLabel = $derived.by(() => `${weeklyChange > 0 ? "+" : ""}${weeklyChange}%`);
+	const toDisplayTags = (value: unknown) => {
+		if (!Array.isArray(value)) return [];
+		return value.filter((tag): tag is string => typeof tag === "string");
+	};
 
 	let copiedUrl = $state("");
 	const isCopied = $derived.by(() => copiedUrl !== "" && copiedUrl === shortUrl);
 	let copyTimeout: ReturnType<typeof setTimeout> | null = null;
 	let isShareOpen = $state(false);
 	let isEditOpen = $state(false);
+	let tagInput = $state("");
+	let tagMessage = $state("");
+	let tagError = $state("");
+	const sourceTags = $derived.by(() => toDisplayTags(data.link.tags));
+	let tags = $state<string[]>([]);
+	let didInitTags = $state(false);
+	const isTagMutating = $derived.by(() => addTag.pending > 0 || removeTag.pending > 0);
 
 	const copyShortUrl = async () => {
 		if (!shortUrl) return;
@@ -94,6 +112,70 @@
 			return value === "on" || value === "true";
 		}
 		return undefined;
+	});
+
+	const applyTagResult = (result: TagMutationResult) => {
+		tags = result.tags;
+		if (result.ok) {
+			tagError = "";
+			tagMessage = result.message ?? "Tags saved.";
+			return;
+		}
+
+		tagMessage = "";
+		tagError = result.message ?? "Unable to save tags.";
+	};
+
+	const addTagFromInput = async () => {
+		if (isTagMutating) return;
+		if (!tagInput.trim()) return;
+
+		tagMessage = "";
+		tagError = "";
+
+		try {
+			const result = await addTag({ linkId: data.link.id, tag: tagInput });
+			applyTagResult(result);
+			if (result.ok) {
+				tagInput = "";
+			}
+		} catch (error) {
+			tagMessage = "";
+			tagError = "Unable to save tag right now.";
+		}
+	};
+
+	const handleTagInputKeydown = (event: KeyboardEvent) => {
+		if (event.key !== "Enter") return;
+		event.preventDefault();
+		event.stopPropagation();
+	};
+
+	const handleTagInput = async () => {
+		if (isTagMutating) return;
+		if (!/\s/.test(tagInput)) return;
+		await addTagFromInput();
+	};
+
+	const removeExistingTag = async (tag: string) => {
+		if (isTagMutating) return;
+
+		tagMessage = "";
+		tagError = "";
+
+		try {
+			const result = await removeTag({ linkId: data.link.id, tag });
+			applyTagResult(result);
+		} catch (error) {
+			tagMessage = "";
+			tagError = "Unable to remove tag right now.";
+		}
+	};
+
+	$effect(() => {
+		if (didInitTags) return;
+		tags = sourceTags;
+		didInitTags = true;
 	});
 </script>
 
@@ -180,14 +262,56 @@
 			</div>
 		</div>
 
-		<div
-			class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t-2 border-black/10 pt-4 text-sm text-[var(--muted)]"
-		>
-			<div class="inline-flex items-center gap-2">
-				<span class="text-base">🏷</span>
-				<span>No tags</span>
+		<div class="mt-6 border-t-2 border-black/10 pt-4">
+			<div class="flex flex-wrap items-start justify-between gap-4">
+				<div class="flex-1">
+					<div class="inline-flex items-center gap-2 text-sm text-[var(--muted)]">
+						<span class="text-base">🏷</span>
+						<span>Tags</span>
+					</div>
+
+					<div class="mt-3 rounded-xl border-2 border-black bg-white p-2">
+						<div class="flex flex-wrap items-center gap-2">
+							{#each tags as tag (tag)}
+								<span
+									class="inline-flex items-center gap-2 rounded-full border-2 border-black bg-primary px-3 py-1 text-xs font-semibold tracking-wide uppercase"
+								>
+									<span>{tag}</span>
+									<button
+										class="grid h-5 w-5 place-items-center rounded-full border border-black bg-white text-[10px] leading-none"
+										type="button"
+										onclick={() => removeExistingTag(tag)}
+										disabled={isTagMutating}
+										aria-label={`Remove ${tag} tag`}
+									>
+										×
+									</button>
+								</span>
+							{/each}
+							<input
+								class="h-8 min-w-[220px] flex-1 border-0 bg-transparent text-sm font-semibold outline-none"
+								placeholder="Type a tag and hit space"
+								bind:value={tagInput}
+								oninput={handleTagInput}
+								onkeydown={handleTagInputKeydown}
+								disabled={isTagMutating}
+								aria-label="Add tag"
+							/>
+						</div>
+					</div>
+					{#if tags.length === 0}
+						<p class="mt-2 text-sm text-[var(--muted)]">No tags yet. Type and press space.</p>
+					{/if}
+
+					{#if tagError}
+						<p class="mt-2 text-sm font-semibold text-red-700">{tagError}</p>
+					{:else if tagMessage}
+						<p class="mt-2 text-sm font-semibold text-[var(--muted)]">{tagMessage}</p>
+					{/if}
+				</div>
+
+				<span class="pt-1 text-sm text-[var(--muted)]">{createdAtLabel}</span>
 			</div>
-			<span>{createdAtLabel}</span>
 		</div>
 	</div>
 

@@ -8,6 +8,7 @@
 		{ href: "/dashboard", label: "Dashboard" },
 		{ href: "/links", label: "Links" },
 		{ href: "/analytics", label: "Analytics" },
+		{ href: "/settings", label: "Settings" },
 	];
 
 	const isActive = (href: string) => $page.url.pathname.startsWith(href);

@@ -11,7 +11,6 @@
 	type BrowserEntry = { browser: string | null; clicks: number };
 	type ReferrerEntry = { referrer: string | null; clicks: number };
 	type CountryEntry = { countryName: string | null; countryCode: string | null; clicks: number };
-	type CityEntry = { city: string | null; countryName: string | null; clicks: number };
 
 	const formatDayLabel = (value: string) => {
 		if (!value) return "";
@@ -59,7 +58,6 @@
 	const browserEntries = $derived.by(() => (data.browsers ?? []) as BrowserEntry[]);
 	const referrerEntries = $derived.by(() => (data.referrers ?? []) as ReferrerEntry[]);
 	const countryEntries = $derived.by(() => (data.countries ?? []) as CountryEntry[]);
-	const cityEntries = $derived.by(() => (data.cities ?? []) as CityEntry[]);
 
 	const labelize = (value: string | null | undefined) => {
 		if (!value) return "Unknown";
@@ -94,24 +92,13 @@
 			.join(" & ");
 	});
 
-	let activeLocationTab = $state<"countries" | "cities">("countries");
-
 	const countryRows = $derived.by(() =>
 		[...countryEntries].filter((entry) => entry.countryName).sort((a, b) => b.clicks - a.clicks),
 	);
-	const cityRows = $derived.by(() =>
-		[...cityEntries].filter((entry) => entry.city).sort((a, b) => b.clicks - a.clicks),
-	);
-	const locationRows = $derived.by(() =>
-		activeLocationTab === "countries" ? countryRows : cityRows,
-	);
+	const locationRows = $derived.by(() => countryRows);
 	const rangeTotal = $derived.by(() => data.rangeTotalClicks ?? 0);
-	const getRowKey = (row: CountryEntry | CityEntry, index: number) =>
-		row.countryName ?? ("city" in row ? row.city : undefined) ?? index;
-	const getRowLabel = (row: CountryEntry | CityEntry) =>
-		"city" in row
-			? `${row.city ?? "Unknown"}, ${row.countryName ?? "Unknown"}`
-			: (row.countryName ?? "Unknown");
+	const getRowKey = (row: CountryEntry, index: number) => row.countryName ?? index;
+	const getRowLabel = (row: CountryEntry) => row.countryName ?? "Unknown";
 
 	const handleFilterChange = (event: Event) => {
 		const target = event.currentTarget as HTMLSelectElement | null;
@@ -261,18 +248,21 @@
 		</div>
 	</div>
 
-	<div class="grid gap-6 lg:grid-cols-2">
-		<div class="brutal-card p-6">
-			<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">Top performing location</p>
-			<h3 class="mt-3 text-2xl font-semibold">{topLocationLabel}</h3>
-			<p class="mt-4 text-sm text-[var(--muted)]">
-				{numberFormatter.format(rangeTotal)} engagements
-			</p>
-			<p class="mt-2 text-xs text-[var(--muted)]">
-				{formatRangeDate(data.rangeStart)} — {formatRangeDate(data.rangeEnd)}
-			</p>
-		</div>
-
+	<div class={`grid gap-6 ${data.showCountryAnalytics ? "lg:grid-cols-2" : ""}`}>
+		{#if data.showCountryAnalytics}
+			<div class="brutal-card p-6">
+				<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
+					Top performing location
+				</p>
+				<h3 class="mt-3 text-2xl font-semibold">{topLocationLabel}</h3>
+				<p class="mt-4 text-sm text-[var(--muted)]">
+					{numberFormatter.format(rangeTotal)} engagements
+				</p>
+				<p class="mt-2 text-xs text-[var(--muted)]">
+					{formatRangeDate(data.rangeStart)} — {formatRangeDate(data.rangeEnd)}
+				</p>
+			</div>
+		{/if}
 		<div class="brutal-card p-6">
 			<div class="flex items-center justify-between">
 				<div>
@@ -315,87 +305,77 @@
 		</div>
 	</div>
 
-	<div class="grid gap-6 lg:grid-cols-2">
-		<div class="brutal-card p-6">
-			<div class="flex items-center justify-between">
-				<div>
-					<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
-						Engagements by location
-					</p>
-					<h3 class="mt-2 text-xl font-semibold">Global heatmap</h3>
+	{#if data.showCountryAnalytics}
+		<div class="grid gap-6 lg:grid-cols-2">
+			<div class="brutal-card p-6">
+				<div class="flex items-center justify-between">
+					<div>
+						<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
+							Engagements by location
+						</p>
+						<h3 class="mt-2 text-xl font-semibold">Global heatmap</h3>
+					</div>
 				</div>
-			</div>
-			<div class="mt-6 h-[320px]">
-				<GeoMap className="h-full" data={countryEntries} />
-			</div>
-		</div>
-
-		<div class="brutal-card p-6">
-			<div class="flex items-center justify-between gap-3">
-				<div>
-					<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
-						Engagements by location
-					</p>
-					<h3 class="mt-2 text-xl font-semibold">Location breakdown</h3>
-				</div>
-				<div class="flex rounded-full border-2 border-black bg-white text-xs font-semibold">
-					<button
-						type="button"
-						class={`rounded-full px-4 py-2 transition-colors ${
-							activeLocationTab === "countries" ? "bg-primary" : "bg-white"
-						}`}
-						onclick={() => (activeLocationTab = "countries")}
-					>
-						Countries
-					</button>
-					<button
-						type="button"
-						class={`rounded-full px-4 py-2 transition-colors ${
-							activeLocationTab === "cities" ? "bg-primary" : "bg-white"
-						}`}
-						onclick={() => (activeLocationTab = "cities")}
-					>
-						Cities
-					</button>
+				<div class="mt-6 h-[320px]">
+					<GeoMap className="h-full" data={countryEntries} />
 				</div>
 			</div>
 
-			<div class="mt-6 overflow-x-auto">
-				<table class="brutal-table w-full min-w-[360px]">
-					<thead>
-						<tr>
-							<th>#</th>
-							<th>{activeLocationTab === "countries" ? "Country" : "City"}</th>
-							<th>Engagements</th>
-							<th>%</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#if locationRows.length === 0}
+			<div class="brutal-card p-6">
+				<div class="flex items-center justify-between gap-3">
+					<div>
+						<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
+							Engagements by location
+						</p>
+						<h3 class="mt-2 text-xl font-semibold">Location breakdown</h3>
+					</div>
+				</div>
+
+				<div class="mt-6 overflow-x-auto">
+					<table class="brutal-table w-full min-w-[360px]">
+						<thead>
 							<tr>
-								<td colspan="4" class="py-6 text-center text-sm text-[var(--muted)]">
-									No location data yet.
-								</td>
+								<th>#</th>
+								<th>Country</th>
+								<th>Engagements</th>
+								<th>%</th>
 							</tr>
-						{:else}
-							{#each locationRows.slice(0, 10) as row, index (getRowKey(row, index))}
+						</thead>
+						<tbody>
+							{#if locationRows.length === 0}
 								<tr>
-									<td class="font-semibold">{index + 1}</td>
-									<td>{getRowLabel(row)}</td>
-									<td class="text-right font-semibold">
-										{numberFormatter.format(row.clicks)}
-									</td>
-									<td class="text-right">
-										{rangeTotal === 0 ? "0%" : `${((row.clicks / rangeTotal) * 100).toFixed(1)}%`}
+									<td colspan="4" class="py-6 text-center text-sm text-[var(--muted)]">
+										No location data yet.
 									</td>
 								</tr>
-							{/each}
-						{/if}
-					</tbody>
-				</table>
+							{:else}
+								{#each locationRows.slice(0, 10) as row, index (getRowKey(row, index))}
+									<tr>
+										<td class="font-semibold">{index + 1}</td>
+										<td>{getRowLabel(row)}</td>
+										<td class="text-right font-semibold">
+											{numberFormatter.format(row.clicks)}
+										</td>
+										<td class="text-right">
+											{rangeTotal === 0 ? "0%" : `${((row.clicks / rangeTotal) * 100).toFixed(1)}%`}
+										</td>
+									</tr>
+								{/each}
+							{/if}
+						</tbody>
+					</table>
+				</div>
 			</div>
 		</div>
-	</div>
+	{:else}
+		<div class="brutal-card p-6">
+			<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">Engagements by location</p>
+			<h3 class="mt-2 text-xl font-semibold">Country tracking is disabled</h3>
+			<p class="mt-3 text-sm text-[var(--muted)]">
+				Enable country tracking in settings to view map and location breakdown data.
+			</p>
+		</div>
+	{/if}
 
 	<div class="brutal-card p-6">
 		<div class="flex items-center justify-between">

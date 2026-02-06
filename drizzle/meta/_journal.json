@@ -22,6 +22,27 @@
       "when": 1770291183122,
       "tag": "0002_boring_ultimo",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1770394902338,
+      "tag": "0003_easy_patch",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1770394996196,
+      "tag": "0004_mute_boom_boom",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1770395747582,
+      "tag": "0005_fine_black_knight",
+      "breakpoints": true
     }
   ]
 }

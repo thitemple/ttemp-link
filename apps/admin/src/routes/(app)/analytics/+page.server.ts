@@ -1,6 +1,6 @@
 import {
+	getAnalyticsSettings,
 	getBrowserBreakdown,
-	getCityBreakdown,
 	getClicksByDay,
 	getCountryBreakdown,
 	getDeviceBreakdown,
@@ -16,7 +16,6 @@ type DeviceRow = { device: string | null; clicks: number };
 type BrowserRow = { browser: string | null; clicks: number };
 type ReferrerRow = { referrer: string | null; clicks: number };
 type CountryRow = { countryCode: string | null; countryName: string | null; clicks: number };
-type CityRow = { city: string | null; countryName: string | null; clicks: number };
 
 const getRangeStart = (rangeDays: number) => {
 	const today = new Date();
@@ -31,38 +30,23 @@ export async function load({ url }) {
 	const range = VALID_RANGES.has(rangeParam) ? rangeParam : 30;
 	const linkParam = (url.searchParams.get("link") ?? "").trim();
 
-	const links = await listLinks();
+	const [links, settings] = await Promise.all([listLinks(), getAnalyticsSettings()]);
+	const showCountryAnalytics = settings?.trackCountry ?? false;
 	const linkId = linkParam && links.some((link) => link.id === linkParam) ? linkParam : null;
 	const normalizeClicks = <T extends { clicks: unknown }>(rows: T[]) =>
 		rows.map((row) => ({ ...row, clicks: Number(row.clicks ?? 0) })) as Array<
 			Omit<T, "clicks"> & { clicks: number }
 		>;
 
-	const [
-		rawClicksByDay,
-		rawRangeTotalClicks,
-		rawDevices,
-		rawBrowsers,
-		rawReferrers,
-		rawCountries,
-		rawCities,
-	] = (await Promise.all([
-		getClicksByDay(range, linkId ?? undefined),
-		getRangeTotalClicks(range, linkId ?? undefined),
-		getDeviceBreakdown(range, linkId ?? undefined),
-		getBrowserBreakdown(range, linkId ?? undefined),
-		getReferrerBreakdown(range, linkId ?? undefined),
-		getCountryBreakdown(range, linkId ?? undefined),
-		getCityBreakdown(range, linkId ?? undefined),
-	])) as [
-		ClicksByDayRow[],
-		number,
-		DeviceRow[],
-		BrowserRow[],
-		ReferrerRow[],
-		CountryRow[],
-		CityRow[],
-	];
+	const [rawClicksByDay, rawRangeTotalClicks, rawDevices, rawBrowsers, rawReferrers, rawCountries] =
+		(await Promise.all([
+			getClicksByDay(range, linkId ?? undefined),
+			getRangeTotalClicks(range, linkId ?? undefined),
+			getDeviceBreakdown(range, linkId ?? undefined),
+			getBrowserBreakdown(range, linkId ?? undefined),
+			getReferrerBreakdown(range, linkId ?? undefined),
+			showCountryAnalytics ? getCountryBreakdown(range, linkId ?? undefined) : Promise.resolve([]),
+		])) as [ClicksByDayRow[], number, DeviceRow[], BrowserRow[], ReferrerRow[], CountryRow[]];
 
 	const clicksByDay = rawClicksByDay.map((entry) => ({
 		day: typeof entry.day === "string" ? entry.day : entry.day.toISOString().slice(0, 10),
@@ -73,7 +57,6 @@ export async function load({ url }) {
 	const browsers = normalizeClicks(rawBrowsers);
 	const referrers = normalizeClicks(rawReferrers);
 	const countries = normalizeClicks(rawCountries);
-	const cities = normalizeClicks(rawCities);
 
 	const topDay = clicksByDay.reduce((acc, entry) => (entry.clicks > acc.clicks ? entry : acc), {
 		day: "",
@@ -97,7 +80,7 @@ export async function load({ url }) {
 		browsers,
 		referrers,
 		countries,
-		cities,
+		showCountryAnalytics,
 		topDay,
 		topCountries,
 		rangeStart: rangeStart.toISOString(),

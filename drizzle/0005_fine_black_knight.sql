@@ -1,0 +1,1 @@
+ALTER TABLE "analytics_settings" ADD COLUMN "maxmind_license_key" text;

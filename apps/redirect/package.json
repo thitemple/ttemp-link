@@ -18,6 +18,7 @@
 	},
 	"dependencies": {
 		"@ttemp/db": "workspace:*",
+		"@maxmind/geoip2-node": "^6.1.0",
 		"ua-parser-js": "^2.0.9"
 	},
 	"devDependencies": {
