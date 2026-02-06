@@ -1,6 +1,13 @@
 import { command, form, getRequestEvent } from "$app/server";
 import { error, invalid } from "@sveltejs/kit";
-import { createLink as createLinkRecord, findLinkById, updateLink } from "@ttemp/db/queries";
+import {
+	createLink as createLinkRecord,
+	deleteLink as deleteLinkRecord,
+	findLinkById,
+	findLinkBySlug,
+	updateLink,
+} from "@ttemp/db/queries";
+import { isValidSlug, normalizeSlug } from "@ttemp/db/slug";
 import * as v from "valibot";
 import { resolveCreateSlug } from "$lib/server/link-create";
 import { normalizeTag, normalizeTags, validateTagLimits } from "$lib/server/link-tags";
@@ -201,3 +208,58 @@ export const removeTag = command(
 		return { ok: true, tags: nextTags };
 	},
 );
+
+const updateLinkSchema = v.object({
+	linkId: v.string(),
+	destination: v.string(),
+	title: v.optional(v.string()),
+	slug: v.string(),
+	isActive: v.optional(v.boolean()),
+});
+
+const linkIdSchema = v.object({
+	linkId: v.string(),
+});
+
+export const updateLinkForm = form(updateLinkSchema, async (data, issue) => {
+	const { locals } = getRequestEvent();
+	if (!locals.user) {
+		invalid("You must be signed in to update links.");
+	}
+
+	const destinationInput = data.destination.trim();
+	const destinationUrl = normalizeDestinationUrl(destinationInput);
+	if (!destinationUrl) {
+		invalid(issue.destination("Destination URL must be a valid http(s) address."));
+	}
+
+	const slug = normalizeSlug(data.slug);
+	if (!slug || !isValidSlug(slug)) {
+		invalid(issue.slug("Slug can only use letters, numbers, underscores, or dashes."));
+	}
+
+	const existing = await findLinkBySlug(slug);
+	if (existing && existing.id !== data.linkId) {
+		invalid(issue.slug("That slug is already taken."));
+	}
+
+	const title = (data.title ?? "").trim() || null;
+	const isActive = data.isActive ?? true;
+
+	await updateLink(data.linkId, {
+		slug,
+		destinationUrl,
+		title,
+		isActive,
+	});
+
+	const { getLinkById } = await import("$lib/model/link/queries.remote");
+	getLinkById({ id: data.linkId }).refresh();
+
+	return { success: true };
+});
+
+export const deleteLinkCommand = command(linkIdSchema, async ({ linkId }) => {
+	await deleteLinkRecord(linkId);
+	return { deleted: true };
+});

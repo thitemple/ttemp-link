@@ -1,3 +1,4 @@
+import { query } from "$app/server";
 import {
 	getAnalyticsSettings,
 	getBrowserBreakdown,
@@ -6,10 +7,26 @@ import {
 	getDeviceBreakdown,
 	getRangeTotalClicks,
 	getReferrerBreakdown,
+	getTopLinksByRange,
+	getTotalClicks,
 	listLinks,
 } from "@ttemp/db/queries";
+import * as v from "valibot";
 
-const VALID_RANGES = new Set([7, 30, 90]);
+const VALID_DASHBOARD_RANGES = new Set([7, 15, 30]);
+
+const dashboardArgSchema = v.object({
+	range: v.number(),
+});
+
+export const getDashboardData = query(dashboardArgSchema, async ({ range }) => {
+	const validRange = VALID_DASHBOARD_RANGES.has(range) ? range : 7;
+	const [topLinks, totalClicks] = await Promise.all([
+		getTopLinksByRange(validRange),
+		getTotalClicks(),
+	]);
+	return { range: validRange, topLinks, totalClicks };
+});
 
 type ClicksByDayRow = { day: string | Date; clicks: number };
 type DeviceRow = { device: string | null; clicks: number };
@@ -17,22 +34,29 @@ type BrowserRow = { browser: string | null; clicks: number };
 type ReferrerRow = { referrer: string | null; clicks: number };
 type CountryRow = { countryCode: string | null; countryName: string | null; clicks: number };
 
+const VALID_ANALYTICS_RANGES = new Set([7, 30, 90]);
+
+const analyticsArgSchema = v.object({
+	range: v.number(),
+	linkId: v.optional(v.nullable(v.string())),
+});
+
 const getRangeStart = (rangeDays: number) => {
 	const today = new Date();
-	const utcStart = new Date(
+	return new Date(
 		Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - (rangeDays - 1)),
 	);
-	return utcStart;
 };
 
-export async function load({ url }) {
-	const rangeParam = Number(url.searchParams.get("range") ?? "30");
-	const range = VALID_RANGES.has(rangeParam) ? rangeParam : 30;
-	const linkParam = (url.searchParams.get("link") ?? "").trim();
+export const getAnalyticsData = query(analyticsArgSchema, async ({ range, linkId }) => {
+	const validRange = VALID_ANALYTICS_RANGES.has(range) ? range : 30;
+	const linkParam = (linkId ?? "").trim();
 
 	const [links, settings] = await Promise.all([listLinks(), getAnalyticsSettings()]);
 	const showCountryAnalytics = settings?.trackCountry ?? false;
-	const linkId = linkParam && links.some((link) => link.id === linkParam) ? linkParam : null;
+	const resolvedLinkId =
+		linkParam && links.some((link) => link.id === linkParam) ? linkParam : null;
+
 	const normalizeClicks = <T extends { clicks: unknown }>(rows: T[]) =>
 		rows.map((row) => ({ ...row, clicks: Number(row.clicks ?? 0) })) as Array<
 			Omit<T, "clicks"> & { clicks: number }
@@ -40,12 +64,14 @@ export async function load({ url }) {
 
 	const [rawClicksByDay, rawRangeTotalClicks, rawDevices, rawBrowsers, rawReferrers, rawCountries] =
 		(await Promise.all([
-			getClicksByDay(range, linkId ?? undefined),
-			getRangeTotalClicks(range, linkId ?? undefined),
-			getDeviceBreakdown(range, linkId ?? undefined),
-			getBrowserBreakdown(range, linkId ?? undefined),
-			getReferrerBreakdown(range, linkId ?? undefined),
-			showCountryAnalytics ? getCountryBreakdown(range, linkId ?? undefined) : Promise.resolve([]),
+			getClicksByDay(validRange, resolvedLinkId ?? undefined),
+			getRangeTotalClicks(validRange, resolvedLinkId ?? undefined),
+			getDeviceBreakdown(validRange, resolvedLinkId ?? undefined),
+			getBrowserBreakdown(validRange, resolvedLinkId ?? undefined),
+			getReferrerBreakdown(validRange, resolvedLinkId ?? undefined),
+			showCountryAnalytics
+				? getCountryBreakdown(validRange, resolvedLinkId ?? undefined)
+				: Promise.resolve([]),
 		])) as [ClicksByDayRow[], number, DeviceRow[], BrowserRow[], ReferrerRow[], CountryRow[]];
 
 	const clicksByDay = rawClicksByDay.map((entry) => ({
@@ -67,12 +93,12 @@ export async function load({ url }) {
 		.sort((a, b) => b.clicks - a.clicks)
 		.slice(0, 2);
 
-	const rangeStart = getRangeStart(range);
+	const rangeStart = getRangeStart(validRange);
 	const rangeEnd = new Date();
 
 	return {
-		range,
-		linkId,
+		range: validRange,
+		linkId: resolvedLinkId,
 		links,
 		clicksByDay,
 		rangeTotalClicks,
@@ -86,4 +112,4 @@ export async function load({ url }) {
 		rangeStart: rangeStart.toISOString(),
 		rangeEnd: rangeEnd.toISOString(),
 	};
-}
+});
