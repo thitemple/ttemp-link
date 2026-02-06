@@ -86,12 +86,13 @@
 						<th>Short link</th>
 						<th>Destination</th>
 						<th>Clicks</th>
+						<th></th>
 					</tr>
 				</thead>
 				<tbody>
 					{#if data.topLinks.length === 0}
 						<tr>
-							<td colspan="4" class="py-6 text-center text-sm text-[var(--muted)]">
+							<td colspan="5" class="py-6 text-center text-sm text-[var(--muted)]">
 								No clicks yet. Create a link and share it.
 							</td>
 						</tr>
@@ -102,13 +103,18 @@
 								<td>
 									<div class="flex flex-col">
 										<span class="text-xs text-[var(--muted)]">{link.slug}</span>
-										<span class="font-semibold">{shortUrl(link.slug)}</span>
+										<a class="font-semibold hover:underline" href={`/links/${link.id}`}>
+											{shortUrl(link.slug)}
+										</a>
 									</div>
 								</td>
 								<td>
 									<span class="block max-w-[280px] truncate text-sm">{link.destinationUrl}</span>
 								</td>
 								<td class="text-right font-semibold">{link.clicks}</td>
+								<td class="text-right">
+									<a class="brutal-button-secondary" href={`/links/${link.id}`}>View</a>
+								</td>
 							</tr>
 						{/each}
 					{/if}
