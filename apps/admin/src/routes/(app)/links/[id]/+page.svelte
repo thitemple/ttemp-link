@@ -21,7 +21,12 @@
 		}
 	});
 	const titleText = $derived.by(() => data.link.title ?? "untitled");
-	const displayTitle = $derived.by(() => `${hostname} — ${titleText}`);
+	const isTitleTruncated = $derived.by(() => titleText.length > 50);
+	const truncatedTitleText = $derived.by(() => {
+		return isTitleTruncated ? titleText.slice(0, 50) + "..." : titleText;
+	});
+	const displayTitle = $derived.by(() => `${hostname} — ${truncatedTitleText}`);
+	const fullTitle = $derived.by(() => `${hostname} — ${titleText}`);
 	const formatDateTime = (value: string | number | Date | null | undefined) => {
 		if (!value) return "";
 		const date = new Date(value);
@@ -188,9 +193,9 @@
 	});
 </script>
 
-<section class="grid gap-6">
+<section class="grid min-w-0 gap-6">
 	<div class="brutal-card p-6">
-		<div class="flex flex-wrap items-start justify-between gap-4">
+		<div class="flex min-w-0 flex-wrap items-start justify-between gap-4">
 			<div class="flex min-w-0 flex-1 flex-wrap items-start gap-4">
 				<div
 					class="grid h-12 w-12 place-items-center rounded-2xl border-2 border-black bg-white text-lg font-semibold"
@@ -198,7 +203,18 @@
 					{hostname.slice(0, 2).toUpperCase()}
 				</div>
 				<div class="min-w-0 flex-1">
-					<p class="truncate text-3xl font-semibold">{displayTitle}</p>
+					<div class={isTitleTruncated ? "group relative" : ""}>
+						<p class="truncate text-3xl font-semibold" class:cursor-help={isTitleTruncated}>
+							{displayTitle}
+						</p>
+						{#if isTitleTruncated}
+							<div
+								class="pointer-events-none absolute top-full left-0 z-50 mt-2 max-w-2xl scale-95 rounded-xl border-2 border-black bg-white p-4 text-base font-semibold opacity-0 shadow-[4px_4px_0px_#000] transition-all duration-200 group-hover:pointer-events-auto group-hover:scale-100 group-hover:opacity-100"
+							>
+								{fullTitle}
+							</div>
+						{/if}
+					</div>
 					<div class="mt-2 flex flex-wrap items-center gap-3 text-sm">
 						<a
 							class="font-semibold text-primary-600 hover:underline"
