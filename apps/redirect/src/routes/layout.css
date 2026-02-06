@@ -1,12 +1,17 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 
+@theme {
+	--color-primary: #f6d736;
+	--color-primary-600: #8a5a00;
+}
+
 @layer base {
 	:root {
 		--bg: #f4f1ea;
 		--ink: #0b0b0b;
-		--accent: #ff5d2a;
-		--accent-2: #1a7aff;
+		--accent: var(--color-primary);
+		--accent-2: var(--color-primary-600);
 		--paper: #ffffff;
 		--frame: #111111;
 		--muted: #6b6b6b;
@@ -41,6 +46,6 @@
 	}
 
 	.brutal-pill {
-		@apply rounded-full border-2 border-black bg-[var(--accent)] px-3 py-1 text-xs font-semibold tracking-wide text-black uppercase;
+		@apply rounded-full border-2 border-black bg-primary px-3 py-1 text-xs font-semibold tracking-wide text-black uppercase;
 	}
 }

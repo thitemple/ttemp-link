@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { PUBLIC_ADMIN_APP_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 
 const normalizeTarget = (value: string | null | undefined) => {
 	const trimmed = value?.trim();
@@ -7,7 +7,7 @@ const normalizeTarget = (value: string | null | undefined) => {
 };
 
 export async function load({ url }) {
-	const target = normalizeTarget(PUBLIC_ADMIN_APP_URL);
+	const target = normalizeTarget(env.PUBLIC_ADMIN_APP_URL);
 	if (target) {
 		try {
 			const targetUrl = new URL(target, url.origin);

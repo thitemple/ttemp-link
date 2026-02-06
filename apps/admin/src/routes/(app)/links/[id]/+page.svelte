@@ -33,12 +33,19 @@
 		}
 	};
 	const createdAtLabel = $derived.by(() => formatDateTime(data.link.createdAt));
+	const toFiniteNumber = (value: unknown) => {
+		const parsed = Number(value);
+		return Number.isFinite(parsed) ? parsed : 0;
+	};
 
-	const lastRangeClicks = $derived.by(() => data.stats?.lastRangeClicks ?? 0);
-	const previousRangeClicks = $derived.by(() => data.stats?.previousRangeClicks ?? 0);
+	const lastRangeClicks = $derived.by(() => toFiniteNumber(data.stats?.lastRangeClicks));
+	const previousRangeClicks = $derived.by(() => toFiniteNumber(data.stats?.previousRangeClicks));
 	const weeklyChange = $derived.by(() => {
-		if (previousRangeClicks === 0) return 0;
-		return Math.round(((lastRangeClicks - previousRangeClicks) / previousRangeClicks) * 100);
+		if (previousRangeClicks <= 0) {
+			return lastRangeClicks > 0 ? 100 : 0;
+		}
+		const change = ((lastRangeClicks - previousRangeClicks) / previousRangeClicks) * 100;
+		return Number.isFinite(change) ? Math.round(change) : 0;
 	});
 	const weeklyChangeLabel = $derived.by(() => `${weeklyChange > 0 ? "+" : ""}${weeklyChange}%`);
 
@@ -103,7 +110,7 @@
 					<p class="text-3xl font-semibold">{displayTitle}</p>
 					<div class="mt-2 flex flex-wrap items-center gap-3 text-sm">
 						<a
-							class="font-semibold text-[var(--accent-2)] hover:underline"
+							class="font-semibold text-primary-600 hover:underline"
 							href={shortUrl}
 							target="_blank"
 							rel="noreferrer"
@@ -205,7 +212,7 @@
 			<p class="mt-2 text-sm text-[var(--muted)]">Update destination, slug, or status.</p>
 
 			{#if form?.message}
-				<div class="mt-5 border-2 border-black bg-[var(--accent)] px-4 py-3 text-sm font-semibold">
+				<div class="mt-5 border-2 border-black bg-primary px-4 py-3 text-sm font-semibold">
 					{form.message}
 				</div>
 			{/if}

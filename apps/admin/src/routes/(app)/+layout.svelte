@@ -49,7 +49,7 @@
 				{#each navItems as item (item.href)}
 					<a
 						class={`border-2 border-black px-4 py-2 text-sm font-semibold shadow-[4px_4px_0px_#000] transition-transform duration-150 ${
-							isActive(item.href) ? "bg-[var(--accent)]" : "bg-white hover:-translate-y-0.5"
+							isActive(item.href) ? "bg-primary" : "bg-white hover:-translate-y-0.5"
 						}`}
 						href={item.href}
 					>

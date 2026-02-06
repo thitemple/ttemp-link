@@ -69,7 +69,7 @@
 					<a
 						href={`?range=${value}`}
 						class={`border-2 border-black px-3 py-1 text-xs font-semibold tracking-wide uppercase shadow-[3px_3px_0px_#000] ${
-							data.range === value ? "bg-[var(--accent)]" : "bg-white"
+							data.range === value ? "bg-primary" : "bg-white"
 						}`}
 					>
 						{value} days

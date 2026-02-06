@@ -93,7 +93,7 @@
 				class="mt-6 rounded-2xl border-2 border-black bg-sky-50 px-6 py-5 shadow-[4px_4px_0px_#000]"
 			>
 				<a
-					class="block truncate text-center text-2xl font-semibold text-[var(--accent-2)] hover:underline"
+					class="block truncate text-center text-2xl font-semibold text-primary-600 hover:underline"
 					href={url}
 					target="_blank"
 					rel="noreferrer"

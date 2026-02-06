@@ -6,17 +6,17 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import * as schema from './schema';
 
+const envFileNames = ['.env.local', '.env'];
+
+const getEnvCandidatePaths = (cwd: string) =>
+	[cwd, path.resolve(cwd, '..'), path.resolve(cwd, '..', '..')].flatMap((directory) =>
+		envFileNames.map((fileName) => path.join(directory, fileName))
+	);
+
 function ensureEnv() {
 	if (process.env.DATABASE_URL) return;
 
-	const cwd = process.cwd();
-	const candidates = [
-		path.join(cwd, '.env'),
-		path.join(cwd, '..', '.env'),
-		path.join(cwd, '..', '..', '.env')
-	];
-
-	for (const candidate of candidates) {
+	for (const candidate of getEnvCandidatePaths(process.cwd())) {
 		if (fs.existsSync(candidate)) {
 			loadEnv({ path: candidate });
 			if (process.env.DATABASE_URL) return;

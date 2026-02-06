@@ -189,7 +189,7 @@
 						datasets: [
 							{
 								data: deviceValues,
-								backgroundColor: ["#1a7aff", "#ff5d2a", "#0b0b0b", "#f4f1ea", "#6b6b6b"],
+								backgroundColor: ["#8a5a00", "#f6d736", "#0b0b0b", "#f4f1ea", "#6b6b6b"],
 								borderWidth: 2,
 								borderColor: "#0b0b0b",
 							},
@@ -236,8 +236,8 @@
 						{
 							label: "Engagements",
 							data: lineValues,
-							borderColor: "#1a7aff",
-							backgroundColor: "rgba(26, 122, 255, 0.2)",
+							borderColor: "#8a5a00",
+							backgroundColor: "rgba(138, 90, 0, 0.2)",
 							borderWidth: 2,
 							tension: 0.35,
 							fill: true,
@@ -292,7 +292,7 @@
 							{
 								label: "Referrers",
 								data: referrerValues,
-								backgroundColor: "#ff5d2a",
+								backgroundColor: "#f6d736",
 								borderColor: "#0b0b0b",
 								borderWidth: 2,
 							},
@@ -342,7 +342,7 @@
 					<button
 						type="button"
 						class={`rounded-full px-4 py-2 transition-colors ${
-							activeLocationTab === "countries" ? "bg-[var(--accent)]" : "bg-white"
+							activeLocationTab === "countries" ? "bg-primary" : "bg-white"
 						}`}
 						onclick={() => (activeLocationTab = "countries")}
 					>
@@ -351,7 +351,7 @@
 					<button
 						type="button"
 						class={`rounded-full px-4 py-2 transition-colors ${
-							activeLocationTab === "cities" ? "bg-[var(--accent)]" : "bg-white"
+							activeLocationTab === "cities" ? "bg-primary" : "bg-white"
 						}`}
 						onclick={() => (activeLocationTab = "cities")}
 					>
@@ -414,7 +414,7 @@
 						{
 							label: "Browsers",
 							data: browserValues,
-							backgroundColor: "#1a7aff",
+							backgroundColor: "#8a5a00",
 							borderColor: "#0b0b0b",
 							borderWidth: 2,
 						},

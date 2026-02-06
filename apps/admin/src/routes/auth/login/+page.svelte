@@ -20,9 +20,7 @@
 				</p>
 
 				{#if form?.message}
-					<div
-						class="mt-5 border-2 border-black bg-[var(--accent)] px-4 py-3 text-sm font-semibold"
-					>
+					<div class="mt-5 border-2 border-black bg-primary px-4 py-3 text-sm font-semibold">
 						{form.message}
 					</div>
 				{/if}

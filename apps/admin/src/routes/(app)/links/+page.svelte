@@ -117,7 +117,7 @@
 								<td>
 									<span
 										class={`inline-flex items-center rounded-full border-2 border-black px-3 py-1 text-xs font-semibold ${
-											link.isActive ? "bg-[var(--accent-2)] text-white" : "bg-black/10"
+											link.isActive ? "bg-emerald-700 text-white" : "bg-black/10"
 										}`}
 									>
 										{link.isActive ? "Active" : "Inactive"}
@@ -127,7 +127,7 @@
 								<td>{new Date(link.createdAt).toLocaleDateString()}</td>
 								<td class="text-right">
 									<div class="flex items-center justify-end gap-2">
-										<a class="brutal-button-secondary" href={`/links/${link.id}`}>Edit</a>
+										<a class="brutal-button-secondary" href={`/links/${link.id}`}>View</a>
 										<form method="POST" action="?/delete" data-sveltekit-preload-data="off">
 											<input type="hidden" name="id" value={link.id} />
 											<button class="brutal-button" type="submit">Delete</button>
