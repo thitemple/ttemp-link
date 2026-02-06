@@ -191,14 +191,14 @@
 <section class="grid gap-6">
 	<div class="brutal-card p-6">
 		<div class="flex flex-wrap items-start justify-between gap-4">
-			<div class="flex flex-wrap items-start gap-4">
+			<div class="flex min-w-0 flex-1 flex-wrap items-start gap-4">
 				<div
 					class="grid h-12 w-12 place-items-center rounded-2xl border-2 border-black bg-white text-lg font-semibold"
 				>
 					{hostname.slice(0, 2).toUpperCase()}
 				</div>
-				<div>
-					<p class="text-3xl font-semibold">{displayTitle}</p>
+				<div class="min-w-0 flex-1">
+					<p class="truncate text-3xl font-semibold">{displayTitle}</p>
 					<div class="mt-2 flex flex-wrap items-center gap-3 text-sm">
 						<a
 							class="font-semibold text-primary-600 hover:underline"

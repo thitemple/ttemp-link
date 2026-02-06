@@ -31,15 +31,25 @@
 	let lastCreatedId = $state("");
 	let destinationEditedSinceIssue = $state(false);
 	let lastDestinationIssueKey = $state("");
+	const resetCreateLinkFields = () => {
+		createLink.fields.destination.set("");
+		createLink.fields.slug.set("");
+		createLink.fields.title.set("");
+	};
+	const dashboardCreateLinkForm = createLink.enhance(async ({ submit }) => {
+		const previousCreatedId = createLink.result?.createdId ?? "";
+		await submit();
+		const nextCreatedId = createLink.result?.createdId ?? "";
+		if (!nextCreatedId || nextCreatedId === previousCreatedId || nextCreatedId === lastCreatedId) {
+			return;
+		}
+		lastCreatedId = nextCreatedId;
+		resetCreateLinkFields();
+		isModalOpen = true;
+	});
 	const closeModal = () => {
 		isModalOpen = false;
 	};
-
-	$effect(() => {
-		if (!createdId || createdId === lastCreatedId) return;
-		lastCreatedId = createdId;
-		isModalOpen = true;
-	});
 
 	$effect(() => {
 		if (destinationIssueKey === lastDestinationIssueKey) return;
@@ -139,7 +149,7 @@
 				{/each}
 			{/if}
 
-			<form {...createLink} class="mt-5 grid gap-4" data-sveltekit-preload-data="off">
+			<form {...dashboardCreateLinkForm} class="mt-5 grid gap-4" data-sveltekit-preload-data="off">
 				<label class="flex flex-col gap-2 text-sm font-semibold">
 					<span>Destination URL</span>
 					{#if !destinationEditedSinceIssue}

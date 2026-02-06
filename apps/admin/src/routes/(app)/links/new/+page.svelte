@@ -12,13 +12,19 @@
 		);
 	});
 	const hasFieldIssues = $derived.by(() => fieldIssueCount > 0);
+	const resetCreateLinkFields = () => {
+		createLink.fields.destination.set("");
+		createLink.fields.slug.set("");
+		createLink.fields.title.set("");
+	};
 
 	const createLinkForm = createLink.enhance(async ({ submit }) => {
+		const previousCreatedId = createLink.result?.createdId ?? "";
 		await submit();
 		const createdId = createLink.result?.createdId ?? "";
-		if (createdId) {
-			await goto(`/links/${encodeURIComponent(createdId)}?created=1`);
-		}
+		if (!createdId || createdId === previousCreatedId) return;
+		resetCreateLinkFields();
+		await goto(`/links/${encodeURIComponent(createdId)}?created=1`);
 	});
 </script>
 
