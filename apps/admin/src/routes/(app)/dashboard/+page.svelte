@@ -79,10 +79,10 @@
 
 <svelte:boundary>
 	<section class="grid gap-6 lg:grid-cols-[2fr_1fr]">
-		<div class="brutal-card p-6">
-			<div class="flex flex-wrap items-center justify-between gap-4">
+		<div class="brutal-card p-4 sm:p-6">
+			<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 				<div>
-					<h2 class="text-2xl font-semibold">Top 10 links</h2>
+					<h2 class="text-xl font-semibold sm:text-2xl">Top 10 links</h2>
 					<p class="text-sm text-[var(--muted)]">Ranked by clicks for the selected range.</p>
 				</div>
 				<div class="flex flex-wrap gap-2">
@@ -90,7 +90,7 @@
 						<button
 							type="button"
 							onclick={() => selectRange(value)}
-							class={`border-2 border-black px-3 py-1 text-xs font-semibold tracking-wide uppercase shadow-[3px_3px_0px_#000] ${
+							class={`border-2 border-black px-2.5 py-1 text-[11px] font-semibold tracking-wide uppercase shadow-[3px_3px_0px_#000] sm:px-3 sm:text-xs ${
 								dashboard.range === value ? "bg-primary" : "bg-white"
 							}`}
 						>
@@ -100,55 +100,57 @@
 				</div>
 			</div>
 
-			<div class="mt-6 overflow-x-auto">
-				<table class="brutal-table w-full min-w-[520px]">
-					<thead>
-						<tr>
-							<th>Rank</th>
-							<th>Short link</th>
-							<th>Destination</th>
-							<th>Clicks</th>
-							<th></th>
-						</tr>
-					</thead>
-					<tbody>
-						{#if dashboard.topLinks.length === 0}
-							<tr>
-								<td colspan="5" class="py-6 text-center text-sm text-[var(--muted)]">
-									No clicks yet. Create a link and share it.
-								</td>
-							</tr>
-						{:else}
-							{#each dashboard.topLinks as link, index (link.id)}
-								<tr>
-									<td class="font-semibold">#{index + 1}</td>
-									<td>
-										<div class="flex flex-col">
+			<div class="mt-6">
+				{#if dashboard.topLinks.length === 0}
+					<div
+						class="rounded border-2 border-black bg-black/5 px-4 py-6 text-center text-sm text-[var(--muted)]"
+					>
+						No clicks yet. Create a link and share it.
+					</div>
+				{:else}
+					<ol class="grid gap-3">
+						{#each dashboard.topLinks as link, index (link.id)}
+							<li
+								class="rounded border-2 border-black bg-white p-3 shadow-[4px_4px_0px_#000] sm:p-4"
+							>
+								<div class="flex items-start justify-between gap-3">
+									<div class="min-w-0 space-y-2">
+										<div class="flex flex-wrap items-center gap-2">
+											<span class="brutal-pill">#{index + 1}</span>
 											<span class="text-xs text-[var(--muted)]">{link.slug}</span>
-											<a class="font-semibold hover:underline" href={`/links/${link.id}`}>
-												{shortUrl(link.slug)}
-											</a>
 										</div>
-									</td>
-									<td>
-										<span class="block max-w-[280px] truncate text-sm">{link.destinationUrl}</span>
-									</td>
-									<td class="text-right font-semibold">{link.clicks}</td>
-									<td class="text-right">
-										<a class="brutal-button-secondary" href={`/links/${link.id}`}>View</a>
-									</td>
-								</tr>
-							{/each}
-						{/if}
-					</tbody>
-				</table>
+										<a
+											class="block truncate text-sm font-semibold hover:underline sm:text-base"
+											href={`/links/${link.id}`}>{shortUrl(link.slug)}</a
+										>
+										<p class="text-sm break-all text-[var(--muted)]">
+											{link.destinationUrl}
+										</p>
+									</div>
+									<div class="flex shrink-0 flex-col items-end gap-2 sm:gap-3">
+										<div class="text-right">
+											<p class="text-[10px] tracking-[0.16em] text-[var(--muted)] uppercase">
+												Clicks
+											</p>
+											<p class="text-lg leading-none font-semibold sm:text-2xl">{link.clicks}</p>
+										</div>
+										<a
+											class="brutal-button-secondary inline-flex px-3 py-1.5 text-xs whitespace-nowrap sm:px-4 sm:py-2 sm:text-sm"
+											href={`/links/${link.id}`}>View</a
+										>
+									</div>
+								</div>
+							</li>
+						{/each}
+					</ol>
+				{/if}
 			</div>
 		</div>
 
 		<div class="grid gap-6">
-			<div class="brutal-card p-6">
+			<div class="brutal-card p-4 sm:p-6">
 				<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">Quick create</p>
-				<h3 class="mt-2 text-2xl font-semibold">Make a short link</h3>
+				<h3 class="mt-2 text-xl font-semibold sm:text-2xl">Make a short link</h3>
 				<p class="mt-2 text-sm text-[var(--muted)]">
 					Paste a long URL and get a short link without leaving the dashboard.
 				</p>
@@ -161,7 +163,11 @@
 					{/each}
 				{/if}
 
-				<form {...dashboardCreateLinkForm} class="mt-5 grid gap-4" data-sveltekit-preload-data="off">
+				<form
+					{...dashboardCreateLinkForm}
+					class="mt-5 grid gap-4"
+					data-sveltekit-preload-data="off"
+				>
 					<label class="flex flex-col gap-2 text-sm font-semibold">
 						<span>Destination URL</span>
 						{#if !destinationEditedSinceIssue}
@@ -198,9 +204,9 @@
 					<button class="brutal-button w-full" type="submit">Create link</button>
 				</form>
 			</div>
-			<div class="brutal-card p-6">
+			<div class="brutal-card p-4 sm:p-6">
 				<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">Total clicks</p>
-				<p class="mt-2 text-4xl font-semibold">{dashboard.totalClicks}</p>
+				<p class="mt-2 text-3xl font-semibold sm:text-4xl">{dashboard.totalClicks}</p>
 				<p class="mt-2 text-sm text-[var(--muted)]">All-time clicks across every short link.</p>
 			</div>
 		</div>
