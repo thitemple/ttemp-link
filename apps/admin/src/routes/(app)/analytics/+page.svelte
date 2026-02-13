@@ -133,30 +133,28 @@
 </script>
 
 <svelte:boundary>
-	<section class="grid gap-6">
-		<div class="brutal-card p-6">
-			<div class="flex flex-wrap items-center justify-between gap-4">
-				<div>
-					<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
-						Analytics overview
-					</p>
-					<h2 class="mt-2 text-2xl font-semibold">Engagement analytics</h2>
+	<section class="grid grid-cols-1 gap-6">
+		<div class="brutal-card p-4 sm:p-6">
+			<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+				<div class="min-w-0">
+					<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">Analytics overview</p>
+					<h2 class="mt-2 text-xl font-semibold sm:text-2xl">Engagement analytics</h2>
 					<p class="mt-2 text-sm text-[var(--muted)]">
 						Explore who is clicking your links and where they are coming from.
 					</p>
 				</div>
-				<div class="flex flex-wrap items-center gap-3">
-					<label class="flex items-center gap-2 text-sm font-semibold">
+				<div class="grid w-full grid-cols-1 gap-3 sm:w-auto sm:grid-cols-2">
+					<label class="grid gap-1 text-sm font-semibold">
 						<span>Range</span>
-						<select class="brutal-input" onchange={handleRangeChange}>
+						<select class="brutal-input min-w-[10rem]" onchange={handleRangeChange}>
 							{#each ranges as value (value)}
 								<option {value} selected={analytics.range === value}>{value} days</option>
 							{/each}
 						</select>
 					</label>
-					<label class="flex items-center gap-2 text-sm font-semibold">
+					<label class="grid gap-1 text-sm font-semibold">
 						<span>Link</span>
-						<select class="brutal-input" onchange={handleLinkChange}>
+						<select class="brutal-input min-w-[10rem]" onchange={handleLinkChange}>
 							<option value="">All links</option>
 							{#each analytics.links as link (link.id)}
 								<option value={link.id} selected={analytics.linkId === link.id}>
@@ -169,12 +167,10 @@
 			</div>
 		</div>
 
-		<div class="grid gap-6 lg:grid-cols-2">
-			<div class="brutal-card p-6">
-				<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
-					Top performing date
-				</p>
-				<h3 class="mt-3 text-2xl font-semibold">{topDayLabel || "No data yet"}</h3>
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+			<div class="brutal-card p-4 sm:p-6">
+				<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">Top performing date</p>
+				<h3 class="mt-3 text-xl font-semibold sm:text-2xl">{topDayLabel || "No data yet"}</h3>
 				<p class="mt-4 text-sm text-[var(--muted)]">
 					{numberFormatter.format(topDayClicks)} engagements
 				</p>
@@ -183,8 +179,8 @@
 				</p>
 			</div>
 
-			<div class="brutal-card p-6">
-				<div class="flex items-center justify-between">
+			<div class="brutal-card p-4 sm:p-6">
+				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div>
 						<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
 							Engagements by device
@@ -195,7 +191,7 @@
 				</div>
 				<div class="mt-6 grid gap-4 lg:grid-cols-[1.2fr_1fr]">
 					<ChartCanvas
-						className="h-[220px]"
+						className="h-[220px] sm:h-[240px]"
 						type="doughnut"
 						data={{
 							labels: deviceLabels,
@@ -209,20 +205,20 @@
 							],
 						}}
 						options={{
+							responsive: true,
+							maintainAspectRatio: false,
 							plugins: {
 								legend: { display: false },
 							},
 							cutout: "70%",
 						}}
 					/>
-					<div class="grid gap-2 text-sm">
+					<div class="grid gap-2 text-sm sm:self-center">
 						{#if deviceEntries.length === 0}
 							<p class="text-[var(--muted)]">No device data yet.</p>
 						{:else}
 							{#each deviceEntries as entry (entry.device)}
-								<div
-									class="flex items-center justify-between gap-2 border-b border-black/10 pb-2"
-								>
+								<div class="flex items-center justify-between gap-2 border-b border-black/10 pb-2">
 									<span class="font-semibold">{labelize(entry.device)}</span>
 									<span>{numberFormatter.format(entry.clicks)}</span>
 								</div>
@@ -233,7 +229,7 @@
 			</div>
 		</div>
 
-		<div class="brutal-card p-6">
+		<div class="brutal-card p-4 sm:p-6">
 			<div class="flex flex-wrap items-center justify-between gap-4">
 				<div>
 					<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
@@ -243,7 +239,7 @@
 				</div>
 				<span class="text-sm text-[var(--muted)]">UTC timeframe</span>
 			</div>
-			<div class="mt-6 h-[280px]">
+			<div class="mt-6 h-[220px] sm:h-[280px]">
 				<ChartCanvas
 					className="h-full"
 					type="line"
@@ -262,6 +258,8 @@
 						],
 					}}
 					options={{
+						responsive: true,
+						maintainAspectRatio: false,
 						plugins: {
 							legend: { display: false },
 						},
@@ -278,13 +276,13 @@
 			</div>
 		</div>
 
-		<div class={`grid gap-6 ${analytics.showCountryAnalytics ? "lg:grid-cols-2" : ""}`}>
+		<div class={`grid grid-cols-1 gap-6 ${analytics.showCountryAnalytics ? "lg:grid-cols-2" : ""}`}>
 			{#if analytics.showCountryAnalytics}
-				<div class="brutal-card p-6">
+				<div class="brutal-card p-4 sm:p-6">
 					<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
 						Top performing location
 					</p>
-					<h3 class="mt-3 text-2xl font-semibold">{topLocationLabel}</h3>
+					<h3 class="mt-3 text-xl font-semibold sm:text-2xl">{topLocationLabel}</h3>
 					<p class="mt-4 text-sm text-[var(--muted)]">
 						{numberFormatter.format(rangeTotal)} engagements
 					</p>
@@ -293,7 +291,7 @@
 					</p>
 				</div>
 			{/if}
-			<div class="brutal-card p-6">
+			<div class="brutal-card min-w-0 p-4 sm:p-6">
 				<div class="flex items-center justify-between">
 					<div>
 						<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
@@ -302,7 +300,7 @@
 						<h3 class="mt-2 text-xl font-semibold">Referrer mix</h3>
 					</div>
 				</div>
-				<div class="mt-6 h-[240px]">
+				<div class="mt-6 h-[220px] sm:h-[240px]">
 					<ChartCanvas
 						className="h-full"
 						type="bar"
@@ -319,6 +317,8 @@
 							],
 						}}
 						options={{
+							responsive: true,
+							maintainAspectRatio: false,
 							plugins: {
 								legend: { display: false },
 							},
@@ -336,8 +336,8 @@
 		</div>
 
 		{#if analytics.showCountryAnalytics}
-			<div class="grid gap-6 lg:grid-cols-2">
-				<div class="brutal-card p-6">
+			<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+				<div class="brutal-card p-4 sm:p-6">
 					<div class="flex items-center justify-between">
 						<div>
 							<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
@@ -346,12 +346,12 @@
 							<h3 class="mt-2 text-xl font-semibold">Global heatmap</h3>
 						</div>
 					</div>
-					<div class="mt-6 h-[320px]">
+					<div class="mt-6 h-[260px] sm:h-[320px]">
 						<GeoMap className="h-full" data={countryEntries} />
 					</div>
 				</div>
 
-				<div class="brutal-card p-6">
+				<div class="brutal-card p-4 sm:p-6">
 					<div class="flex items-center justify-between gap-3">
 						<div>
 							<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
@@ -400,7 +400,7 @@
 				</div>
 			</div>
 		{:else}
-			<div class="brutal-card p-6">
+			<div class="brutal-card p-4 sm:p-6">
 				<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
 					Engagements by location
 				</p>
@@ -411,7 +411,7 @@
 			</div>
 		{/if}
 
-		<div class="brutal-card p-6">
+		<div class="brutal-card p-4 sm:p-6">
 			<div class="flex items-center justify-between">
 				<div>
 					<p class="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
@@ -420,7 +420,7 @@
 					<h3 class="mt-2 text-xl font-semibold">Browser share</h3>
 				</div>
 			</div>
-			<div class="mt-6 h-[220px]">
+			<div class="mt-6 h-[220px] sm:h-[240px]">
 				<ChartCanvas
 					className="h-full"
 					type="bar"
@@ -437,6 +437,8 @@
 						],
 					}}
 					options={{
+						responsive: true,
+						maintainAspectRatio: false,
 						plugins: { legend: { display: false } },
 						scales: {
 							x: { grid: { display: false } },
@@ -455,7 +457,7 @@
 	{/snippet}
 
 	{#snippet failed(error, reset)}
-		<div class="brutal-card p-6 text-center">
+		<div class="brutal-card p-4 text-center sm:p-6">
 			<p class="text-sm text-red-700">Failed to load analytics data. Please try again.</p>
 			<button class="brutal-button-secondary mt-4" onclick={reset}>Retry</button>
 		</div>
