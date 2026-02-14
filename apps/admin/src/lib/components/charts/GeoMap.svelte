@@ -60,15 +60,25 @@
 
 	const createChart = async () => {
 		if (!canvas) return;
-		const { default: ChartJS } = await import("chart.js/auto");
-		await import("chartjs-chart-geo");
-		const topojson = await import("topojson-client");
-		const worldModule = await import("world-atlas/countries-110m.json");
+		const [{ Chart: ChartJS, registerables }, geo, topojson, worldModule] = await Promise.all([
+			import("chart.js"),
+			import("chartjs-chart-geo"),
+			import("topojson-client"),
+			import("world-atlas/countries-110m.json"),
+		]);
+		ChartJS.register(
+			...registerables,
+			geo.ChoroplethController,
+			geo.GeoFeature,
+			geo.ColorScale,
+			geo.ProjectionScale,
+		);
 		const world = "default" in worldModule ? worldModule.default : worldModule;
 		const worldFeatures = (topojson.feature(world as any, world.objects.countries as any) as any)
 			.features as any[];
 		features = worldFeatures;
 		const dataset = buildDataset(worldFeatures, data);
+		chart?.destroy();
 		chart = new ChartJS(canvas, {
 			type: "choropleth",
 			data: {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+	import { onDestroy } from "svelte";
 	import type { Chart, ChartConfiguration, ChartData, ChartOptions } from "chart.js";
 
 	let { type, data, options, className } = $props<{
@@ -12,11 +12,21 @@
 	let canvas = $state<HTMLCanvasElement | null>(null);
 	let chart = $state<Chart | null>(null);
 	let currentType = $state<ChartConfiguration["type"] | null>(null);
+	let ChartJS = $state<(typeof import("chart.js/auto"))["default"] | null>(null);
+	let updateTask = Promise.resolve();
+
+	const loadChartJS = async () => {
+		if (ChartJS) return ChartJS;
+		const module = await import("chart.js/auto");
+		ChartJS = module.default;
+		return ChartJS;
+	};
 
 	const createChart = async () => {
 		if (!canvas) return;
-		const { default: ChartJS } = await import("chart.js/auto");
-		chart = new ChartJS(canvas, {
+		const ChartConstructor = await loadChartJS();
+		chart?.destroy();
+		chart = new ChartConstructor(canvas, {
 			type,
 			data,
 			options: (options ?? {}) as ChartOptions,
@@ -37,17 +47,20 @@
 		chart.update();
 	};
 
-	onMount(() => {
-		void createChart();
-		return () => {
-			chart?.destroy();
-			chart = null;
-			currentType = null;
-		};
+	onDestroy(() => {
+		chart?.destroy();
+		chart = null;
+		currentType = null;
 	});
 
 	$effect(() => {
-		void updateChart();
+		void canvas;
+		void type;
+		void data;
+		void options;
+		updateTask = updateTask.then(updateChart).catch((error) => {
+			console.error("Failed to render chart", error);
+		});
 	});
 </script>
 
