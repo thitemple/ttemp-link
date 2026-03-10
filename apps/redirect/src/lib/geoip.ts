@@ -55,7 +55,7 @@ export const resolveCountryFromGeoLite = async (
 			countryCode,
 			countryName: countryName ?? null
 		};
-	} catch (error) {
+	} catch {
 		return null;
 	}
 };

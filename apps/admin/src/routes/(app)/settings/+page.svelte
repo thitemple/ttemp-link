@@ -41,8 +41,7 @@
 		try {
 			await refreshGeoLite();
 		} catch (err) {
-			refreshError =
-				err instanceof Error ? err.message : "Unable to refresh the GeoLite database.";
+			refreshError = err instanceof Error ? err.message : "Unable to refresh the GeoLite database.";
 		} finally {
 			isRefreshing = false;
 		}
@@ -125,11 +124,8 @@
 			<div class="mt-6 grid gap-3 text-sm">
 				<p>
 					<span class="font-semibold">Source:</span>
-					<a
-						class="underline"
-						href={settingsData.geo.sourceUrl}
-						target="_blank"
-						rel="noreferrer">{settingsData.geo.sourceUrl}</a
+					<a class="underline" href={settingsData.geo.sourceUrl} target="_blank" rel="noreferrer"
+						>{settingsData.geo.sourceUrl}</a
 					>
 				</p>
 				<p>

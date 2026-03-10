@@ -84,6 +84,7 @@ openssl rand -base64 32
 - `MAXMIND_LICENSE_KEY` — optional key for GeoLite2 Country fallback downloads from the settings page.
 
 Country analytics behavior:
+
 - Country tracking is controlled in `/settings`.
 - Resolution order is provider headers first, GeoLite fallback second.
 - GeoLite database is stored in Postgres and refreshed from the admin settings page.
@@ -94,3 +95,28 @@ Country analytics behavior:
 - `bun run build` — build both apps
 - `bun run db:start` — start Postgres
 - `bun run db:studio` — Drizzle Studio
+
+## CapRover deployment
+
+This repo deploys the two web apps separately on CapRover:
+
+- `ttemp-admin` uses `captain-definition-admin` and `apps/admin/Dockerfile`
+- `ttemp-redirect` uses `captain-definition-redirect` and `apps/redirect/Dockerfile`
+
+Postgres is not built from this repo. Create it in CapRover as a one-click PostgreSQL app and keep it internal-only.
+
+Recommended first rollout:
+
+1. Create `ttemp-db`, `ttemp-admin`, and `ttemp-redirect` in CapRover.
+2. Set the deployment path for each web app to its captain definition file.
+3. Configure environment variables in CapRover.
+4. Deploy once manually from the CapRover dashboard.
+5. After that works, enable GitHub Actions deploys.
+
+Required GitHub Actions secrets:
+
+- `CAPROVER_SERVER`
+- `CAPROVER_APP_TOKEN_TTEMP_ADMIN`
+- `CAPROVER_APP_TOKEN_TTEMP_REDIRECT`
+
+Workflow triggers are intentionally scoped so app-only changes deploy only that app, while shared DB and workspace dependency changes deploy both apps.

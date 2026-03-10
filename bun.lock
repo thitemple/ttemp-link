@@ -5,8 +5,18 @@
     "": {
       "name": "ttemp-link",
       "devDependencies": {
+        "@eslint/compat": "^2.0.1",
+        "@eslint/js": "^9.39.2",
         "drizzle-kit": "^0.31.8",
+        "eslint": "^9.39.2",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-svelte": "^3.14.0",
+        "globals": "^17.1.0",
+        "prettier": "^3.8.1",
+        "prettier-plugin-svelte": "^3.4.1",
+        "prettier-plugin-tailwindcss": "^0.7.2",
         "turbo": "^2.0.14",
+        "typescript-eslint": "^8.53.1",
       },
     },
     "apps/admin": {

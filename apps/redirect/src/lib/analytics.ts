@@ -20,7 +20,7 @@ export const normalizeReferrer = (referer: string | null) => {
 	if (!value) return null;
 	try {
 		return new URL(value).hostname || null;
-	} catch (error) {
+	} catch {
 		return null;
 	}
 };
@@ -85,7 +85,7 @@ const parseJsonObject = (value: string | null) => {
 	try {
 		const parsed = JSON.parse(input);
 		return parsed && typeof parsed === 'object' ? parsed : null;
-	} catch (error) {
+	} catch {
 		return null;
 	}
 };
@@ -110,7 +110,7 @@ export const resolveCountryName = (countryCode: string | null) => {
 	try {
 		const display = new Intl.DisplayNames(['en'], { type: 'region' });
 		return display.of(code.toUpperCase()) ?? null;
-	} catch (error) {
+	} catch {
 		return null;
 	}
 };

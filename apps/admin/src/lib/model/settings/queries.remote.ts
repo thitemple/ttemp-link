@@ -1,6 +1,10 @@
 import { query } from "$app/server";
 import { env } from "$env/dynamic/private";
-import { getAnalyticsSettings, getGeoipCountryDb, saveGeoipCountryDbCheck } from "@ttemp/db/queries";
+import {
+	getAnalyticsSettings,
+	getGeoipCountryDb,
+	saveGeoipCountryDbCheck,
+} from "@ttemp/db/queries";
 import {
 	checkLatestGeoLiteVersion,
 	MAXMIND_SOURCE,

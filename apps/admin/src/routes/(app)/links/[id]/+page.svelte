@@ -124,9 +124,7 @@
 	};
 
 	const updateIssues = $derived.by(() => updateLinkForm.fields?.allIssues() ?? []);
-	const destinationIssues = $derived.by(
-		() => updateLinkForm.fields?.destination?.issues() ?? [],
-	);
+	const destinationIssues = $derived.by(() => updateLinkForm.fields?.destination?.issues() ?? []);
 	const slugIssues = $derived.by(() => updateLinkForm.fields?.slug?.issues() ?? []);
 
 	const applyTagResult = (result: TagMutationResult) => {
