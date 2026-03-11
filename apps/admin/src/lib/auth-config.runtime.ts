@@ -1,4 +1,4 @@
-import { BETTER_AUTH_BASE_URL, BETTER_AUTH_URL } from "$env/static/private";
+import { env } from "$env/dynamic/private";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db, schema } from "@ttemp/db";
 
@@ -7,5 +7,5 @@ export const authConfig = {
 	emailAndPassword: {
 		enabled: true,
 	},
-	baseURL: BETTER_AUTH_BASE_URL ?? BETTER_AUTH_URL,
+	baseURL: env.BETTER_AUTH_BASE_URL ?? env.BETTER_AUTH_URL,
 };
